@@ -1,0 +1,3 @@
+# ignore parameter files
+*.parameters.json
+*.params.json
