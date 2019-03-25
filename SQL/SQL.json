@@ -1,0 +1,119 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlServerName": {
+            "defaultValue": "sql-rohopkin",
+            "type": "string",
+            "metadata": {
+                "description": "The name of the SQL server instance"
+            }
+        },
+        "sqlServerLogin": {
+            "type": "string",
+            "metadata": {
+                "description": "The SQL server's admin login"
+            }
+        },
+        "sqlServerLoginPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "The SQL server's admin login password"
+            }
+        },
+        "databaseObject": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of database objects"
+            },
+            "defaultValue": [
+                {
+                    "databaseName": "foobarDB",
+                    "sku": {
+                        "name": "S0",
+                        "tier": "Standard"
+                    },
+                    "kind": "v12.0,user",
+                    "properties": {
+                        "collation": "SQL_Latin1_General_CP1_CI_AS",
+                        "maxSizeBytes": 268435456000,
+                        "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                        "zoneRedundant": false
+                    }
+                }
+            ]
+        },
+        "firewallRulesObject": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of firewall rule objects"
+            },
+            "defaultValue": [
+                {
+                    "ruleName": "foobarFirewall",
+                    "startIpAddress": "0.0.0.0",
+                    "endIpAddress": "0.0.0.0"
+                }
+            ]
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Sql/servers",
+            "name": "[parameters('sqlServerName')]",
+            "apiVersion": "2018-06-01-preview",
+            "kind": "v12.0",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "properties": {
+                "administratorLogin": "[parameters('sqlServerLogin')]",
+                "administratorLoginPassword": "[parameters('sqlServerLoginPassword')]",
+                "version": "12.0"
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Sql/servers/databases",
+            "name": "[concat(parameters('sqlServerName'), '/', parameters('databaseObject')[copyindex()].databaseName)]",
+            "apiVersion": "2017-10-01-preview",
+            "location": "[resourceGroup().location]",
+            "tags": {},
+            "copy": {
+                "name": "dbLoop",
+                "count": "[length(parameters('databaseObject'))]"
+            },
+            "sku": {
+                "name": "[parameters('databaseObject')[copyindex()].sku.name]",
+                "tier": "[parameters('databaseObject')[copyindex()].sku.tier]"
+            },
+            "kind": "[parameters('databaseObject')[copyindex()].kind]",
+            "properties": {
+                "collation": "[parameters('databaseObject')[copyindex()].properties.collation]",
+                "maxSizeBytes": "[parameters('databaseObject')[copyindex()].properties.maxSizeBytes]",
+                "catalogCollation": "[parameters('databaseObject')[copyindex()].properties.catalogCollation]",
+                "zoneRedundant": "[parameters('databaseObject')[copyindex()].properties.zoneRedundant]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Sql/servers/firewallRules",
+            "name": "[concat(parameters('sqlServerName'), '/', parameters('firewallRulesObject')[copyindex()].ruleName)]",
+            "apiVersion": "2015-05-01-preview",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "firewallLoop",
+                "count": "[length(parameters('firewallRulesObject'))]"
+            },
+            "properties": {
+                "startIpAddress": "[parameters('firewallRulesObject')[copyindex()].startIpAddress]",
+                "endIpAddress": "[parameters('firewallRulesObject')[copyindex()].endIpAddress]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+            ]
+        }
+    ]
+}
