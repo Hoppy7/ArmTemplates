@@ -17,15 +17,6 @@
     "imageSku": {
       "type": "string",
       "defaultValue": "2016-Datacenter",
-      "allowedValues": [
-        "2008-R2-SP1",
-        "2012-Datacenter",
-        "2012-R2-Datacenter",
-        "2016-Datacenter",
-        "2016-Datacenter-Core",
-        "2016-Datacenter-with-Containers",
-        "2016-Nano-Server"
-      ],
       "metadata": {
         "description": "The image sku"
       }
@@ -109,14 +100,13 @@
   },
   "variables": {
     "vnetId": "[resourceid(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-    "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
-    "nicName": "-nic"
+    "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
   },
   "resources": [
     {
       "apiVersion": "2018-11-01",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), variables('nicName'))]",
+      "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic')]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "nicLoop",
@@ -186,7 +176,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'), copyindex(parameters('instanceIndex')), variables('nicName')))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic'))]"
             }
           ]
         },
