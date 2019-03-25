@@ -132,7 +132,7 @@
       "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
       "copy": {
         "count": "[parameters('instanceCount')]",
-        "name": "virtualMachineLoop"
+        "name": "vmLoop"
       },
       "location": "[resourceGroup().location]",
       "dependsOn": [
