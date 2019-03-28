@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "sqlServerName": {
-            "defaultValue": "sql-rohopkin",
+            "defaultValue": "foobarSqlServer",
             "type": "string",
             "metadata": {
                 "description": "The name of the SQL server instance"
