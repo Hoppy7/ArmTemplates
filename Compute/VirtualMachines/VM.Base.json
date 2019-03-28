@@ -155,7 +155,7 @@
             "version": "latest"
           },
           "osDisk": {
-            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-osdisk')]",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-osDisk')]",
             "caching": "ReadWrite",
             "createOption": "FromImage"
           },
@@ -167,7 +167,7 @@
                 "caching": "[parameters('dataDiskObject')[copyIndex('dataDisks')].caching]",
                 "diskSizeGB": "[parameters('dataDiskObject')[copyIndex('dataDisks')].diskSizeGB]",
                 "lun": "[copyIndex('dataDisks')]",
-                "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-datadisk', copyindex('dataDisks'))]",
+                "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-dataDisk', copyindex('dataDisks'))]",
                 "createOption": "Empty"
               }
             }
