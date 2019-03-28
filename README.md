@@ -1,1 +1,2 @@
+[![Build Status](https://dev.azure.com/rohopkin/SMC/_apis/build/status/Hoppy7.ArmTemplates?branchName=master)](https://dev.azure.com/rohopkin/SMC/_build/latest?definitionId=2&branchName=master)
 Azure Resource Manager (ARM) Templates
