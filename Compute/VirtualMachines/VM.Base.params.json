@@ -1,0 +1,50 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+        "parameters": {
+            "value": "iAmTheAdminNow"
+        },
+        "imageSku": {
+            "value": "2016-Datacenter"
+        },
+        "imagePublisher": {
+            "value": "MicrosoftWindowsServer"
+        },
+        "imageOffer": {
+            "value": "WindowsServer"
+        },
+        "vmSize": {
+            "value": "Standard_DS1_v2"
+        },
+        "vmName": {
+            "value": "demovm0"
+        },
+        "instanceCount": {
+            "value": 3
+        },
+        "instanceIndex": {
+            "value": 1
+        },
+        "vnetResourceGroup": {
+            "value": "RG-Network"
+        },
+        "vnetName": {
+            "value": "VNet-01"
+        },
+        "subnetName": {
+            "value": "Subnet-01"
+        },
+        "dataDiskObject": {
+            "value": [
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                }
+            ]
+        }
+    }
+}
