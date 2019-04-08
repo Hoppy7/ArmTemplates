@@ -193,19 +193,19 @@
                 "description": "The OU to join the SQL servers to"
             }
         },
-        "ClusterBootstrapAccount": {
+        "clusterBootstrapAccount": {
             "type": "string",
             "metadata": {
                 "description": "The OU to join the SQL servers to"
             }
         },
-        "ClusterOperatorAccount": {
+        "clusterOperatorAccount": {
             "type": "string",
             "metadata": {
                 "description": "The OU to join the SQL servers to"
             }
         },
-        "SqlServiceAccount": {
+        "sqlServiceAccount": {
             "type": "string",
             "metadata": {
                 "description": "The OU to join the SQL servers to"
@@ -411,9 +411,9 @@
                 "WsfcDomainProfile": {
                     "DomainFqdn": "[parameters('domainFqdn')]",
                     "OuPath": "[parameters('ouPath')]",
-                    "ClusterBootstrapAccount": "[parameters('ClusterBootstrapAccount')]",
-                    "ClusterOperatorAccount": "[parameters('ClusterOperatorAccount')]",
-                    "SqlServiceAccount": "[parameters('SqlServiceAccount')]",
+                    "clusterBootstrapAccount": "[parameters('clusterBootstrapAccount')]",
+                    "clusterOperatorAccount": "[parameters('clusterOperatorAccount')]",
+                    "sqlServiceAccount": "[parameters('sqlServiceAccount')]",
                     "StorageAccountUrl": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').primaryEndpoints['blob']]",
                     "StorageAccountPrimaryKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').keys[0].value]"
                 }
