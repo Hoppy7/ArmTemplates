@@ -1,0 +1,426 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin username"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Admin password"
+            }
+        },
+        "imageSku": {
+            "type": "string",
+            "defaultValue": "2016-Datacenter",
+            "metadata": {
+                "description": "The image sku"
+            }
+        },
+        "imagePublisher": {
+            "type": "string",
+            "defaultValue": "MicrosoftWindowsServer",
+            "metadata": {
+                "description": "The image publisher"
+            }
+        },
+        "imageOffer": {
+            "type": "string",
+            "defaultValue": "WindowsServer",
+            "metadata": {
+                "description": "The image offer"
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "Standard_DS1_v2",
+            "metadata": {
+                "description": "The size of the VM"
+            }
+        },
+        "availabilitySetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the availability set containing the VMs"
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "The VM's name prefix"
+            }
+        },
+        "instanceCount": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The number of VMs to create"
+            }
+        },
+        "instanceIndex": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The VM's starting index.  e.g. instanceIndex = 1 - testvm01  e.g. instanceIndex = 4 - testvm04"
+            }
+        },
+        "vnetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The vnet's resource group name"
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the vnet to attach the VM's Nic to'"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The vnet's subnet name"
+            }
+        },
+        "dataDiskObject": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of data disk objects"
+            },
+            "defaultValue": [
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                }
+            ]
+        },
+        "sqlAutopatchingDayOfWeek": {
+            "type": "string",
+            "metadata": {
+                "description": "SQL Server Auto Patching Day of A Week"
+            },
+            "allowedValues": [
+                "Everyday",
+                "Never",
+                "Sunday",
+                "Monday",
+                "Tuesday",
+                "Wednesday",
+                "Thursday",
+                "Friday",
+                "Saturday"
+            ],
+            "defaultValue": "Sunday"
+        },
+        "sqlAutopatchingStartHour": {
+            "type": "string",
+            "metadata": {
+                "description": "SQL Server Auto Patching Starting Hour"
+            },
+            "allowedValues": [
+                "0",
+                "1",
+                "2",
+                "3",
+                "4",
+                "5",
+                "6",
+                "7",
+                "8",
+                "9",
+                "10",
+                "11",
+                "12",
+                "13",
+                "14",
+                "15",
+                "16",
+                "17",
+                "18",
+                "19",
+                "20",
+                "21",
+                "22",
+                "23"
+            ],
+            "defaultValue": "2"
+        },
+        "sqlAutopatchingWindowDuration": {
+            "type": "string",
+            "metadata": {
+                "description": "SQL Server Auto Patching Duration Window in minutes"
+            },
+            "allowedValues": [
+                "30",
+                "60",
+                "90",
+                "120",
+                "150",
+                "180"
+            ],
+            "defaultValue": "60"
+        },
+        "cloudWitnessName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the storage account to be used as the witness"
+            }
+        },
+        "failoverClusterName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the failover cluster"
+            }
+        },
+        "domainFqdn": {
+            "type": "string",
+            "metadata": {
+                "description": "The fully qualified domain name"
+            }
+        },
+        "ouPath": {
+            "type": "string",
+            "metadata": {
+                "description": "The OU to join the SQL servers to"
+            }
+        },
+        "ClusterBootstrapAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "The OU to join the SQL servers to"
+            }
+        },
+        "ClusterOperatorAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "The OU to join the SQL servers to"
+            }
+        },
+        "SqlServiceAccount": {
+            "type": "string",
+            "metadata": {
+                "description": "The OU to join the SQL servers to"
+            }
+        }
+    },
+    "variables": {
+        "vnetId": "[resourceid(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[parameters('CloudWitnessName')]",
+            "apiVersion": "2018-11-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Premium_LRS"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "accessTier": "Hot",
+                "supportsHttpsTrafficOnly": true
+            }
+        },
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-publicIP')]",
+            "apiVersion": "2018-12-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4"
+            },
+            "copy": {
+                "name": "pubIpLoop",
+                "count": "[parameters('instanceCount')]"
+            }
+        },
+        {
+            "name": "[parameters('availabilitySetName')]",
+            "type": "Microsoft.Compute/availabilitySets",
+            "apiVersion": "2018-10-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "platformUpdateDomainCount": 2,
+                "platformFaultDomainCount": 2
+            },
+            "sku": {
+                "name": "Aligned"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic')]",
+            "apiVersion": "2018-11-01",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[parameters('instanceCount')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-ipConfig')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-publicIP'))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "pubIpLoop"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+            "apiVersion": "2018-10-01",
+            "copy": {
+                "count": "[parameters('instanceCount')]",
+                "name": "vmLoop"
+            },
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "nicLoop"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(parameters('availabilitySetName')))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('imagePublisher')]",
+                        "offer": "[parameters('imageOffer')]",
+                        "sku": "[parameters('imageSku')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-osDisk')]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "copy": [
+                        {
+                            "name": "dataDisks",
+                            "count": "[length(parameters('dataDiskObject'))]",
+                            "input": {
+                                "caching": "[parameters('dataDiskObject')[copyIndex('dataDisks')].caching]",
+                                "diskSizeGB": "[parameters('dataDiskObject')[copyIndex('dataDisks')].diskSizeGB]",
+                                "lun": "[copyIndex('dataDisks')]",
+                                "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-dataDisk', copyindex('dataDisks'))]",
+                                "createOption": "Empty"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            },
+            "resources": []
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '/SqlIaasExtension')]",
+            "apiVersion": "2015-06-15",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "count": "[parameters('instanceCount')]",
+                "name": "sqlIaasLoop"
+            },
+            "properties": {
+                "type": "SqlIaaSAgent",
+                "publisher": "Microsoft.SqlServer.Management",
+                "typeHandlerVersion": "1.2",
+                "autoUpgradeMinorVersion": "true",  
+                "settings": {
+                    "AutoPatchingSettings": {
+                        "PatchCategory": "WindowsMandatoryUpdates",
+                        "Enable": true,
+                        "DayOfWeek": "[parameters('sqlAutopatchingDayOfWeek')]",
+                        "MaintenanceWindowStartingHour": "[parameters('sqlAutopatchingStartHour')]",
+                        "MaintenanceWindowDuration": "[parameters('sqlAutopatchingWindowDuration')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "vmLoop"
+            ]
+        },
+        {
+            "type": "Microsoft.SqlVirtualMachine/SqlVirtualMachines",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+            "apiVersion": "2017-03-01-preview",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "count": "[parameters('instanceCount')]",
+                "name": "sqlVmLoop"
+            },
+            "properties": {
+                "virtualMachineResourceId": "[resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(parameters('vmName'), copyindex(parameters('instanceIndex'))))]"
+            },
+            "dependsOn": [
+                "sqlIaasLoop"
+            ]
+        },
+        {
+            "type": "Microsoft.SqlVirtualMachine/SqlVirtualMachineGroups",
+            "name": "[parameters('FailoverClusterName')]",
+            "apiVersion": "2017-03-01-preview",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "SqlImageOffer": "[parameters('imageOffer')]",
+                "SqlImageSku": "[parameters('imageSku')]",
+                "WsfcDomainProfile": {
+                    "DomainFqdn": "[parameters('domainFqdn')]",
+                    "OuPath": "[parameters('ouPath')]",
+                    "ClusterBootstrapAccount": "[parameters('ClusterBootstrapAccount')]",
+                    "ClusterOperatorAccount": "[parameters('ClusterOperatorAccount')]",
+                    "SqlServiceAccount": "[parameters('SqlServiceAccount')]",
+                    "StorageAccountUrl": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').primaryEndpoints['blob']]",
+                    "StorageAccountPrimaryKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').keys[0].value]"
+                }
+            },
+            "dependsOn": [
+                "sqlVmLoop"
+            ]
+        }
+    ]
+}
