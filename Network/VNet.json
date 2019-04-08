@@ -6,25 +6,31 @@
             "type": "string",
             "metadata": {
                 "description": "The vnet's name"
-              }
+            }
         },
         "vnetCidr": {
             "type": "string",
             "metadata": {
                 "description": "The vnet's address range as a CIDR block"
-              }
+            }
         },
         "subnetName": {
             "type": "string",
             "metadata": {
                 "description": "The subnet's name"
-              }
+            }
         },
         "subnetCidr": {
             "type": "string",
             "metadata": {
                 "description": "The subnet's address range as a CIDR block"
-              }
+            }
+        },
+        "dnsServers": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of IP addresses"
+            }
         }
     },
     "variables": {},
@@ -35,6 +41,11 @@
             "apiVersion": "2018-12-01",
             "location": "[resourceGroup().location]",
             "properties": {
+                "dhcpOptions": {
+                    "dnsServers": [
+                        "[parameters('dnsServers')]"
+                    ]
+                },
                 "addressSpace": {
                     "addressPrefixes": [
                         "[parameters('vnetCidr')]"
