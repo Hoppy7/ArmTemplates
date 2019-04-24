@@ -51,7 +51,7 @@
         },
         "instanceCount": {
             "type": "int",
-            "defaultValue": 2,
+            "defaultValue": 1,
             "metadata": {
                 "description": "The number of VMs to create"
             }
@@ -97,18 +97,6 @@
                 }
             ]
         },
-        "cloudWitnessName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the storage account to be used as the witness"
-            }
-        },
-        "availabilitySetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the availability set containing the VMs"
-            }
-        },
         "loadBalancerName": {
             "type": "string",
             "metadata": {
@@ -121,125 +109,23 @@
                 "description": "The internal load balancer's IP address"
             }
         },
-        "loadBalancerBackendPool": {
-            "type": "string",
-            "metadata": {
-                "description": "The name of the load balancer's backend pool"
-            }
-        },
         "wsfcIP": {
             "type": "string",
             "metadata": {
                 "description": "The windows server failover cluster's IP address"
             }
         },
-        "failoverClusterName": {
+        "availabilitySetName": {
             "type": "string",
             "metadata": {
-                "description": "The name of the failover cluster"
+                "description": "The name of the availability set containing the VMs"
             }
         },
-        "domainFqdn": {
+        "cloudWitnessName": {
             "type": "string",
             "metadata": {
-                "description": "The fully qualified domain name"
+                "description": "The name of the storage account to be used as the witness"
             }
-        },
-        "ouPath": {
-            "type": "string",
-            "metadata": {
-                "description": "The OU to join the SQL servers to"
-            }
-        },
-        "clusterBootstrapAccount": {
-            "type": "string",
-            "metadata": {
-                "description": "The cluster bootstrap account username"
-            }
-        },
-        "clusterBootstrapAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The cluster bootstrap account password"
-            }
-        },
-        "clusterOperatorAccount": {
-            "type": "string",
-            "metadata": {
-                "description": "The operator account username"
-            }
-        },
-        "clusterOperatorAccountPassword": {
-            "type": "securestring",
-            "metadata": {
-                "description": "The operator account password"
-            }
-        },
-        "sqlServiceAccount": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL service account username"
-            }
-        },
-        "sqlServiceAccountPassword": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL service account password"
-            }
-        },
-        "sqlServerLicenseType": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL server's connection type.  Allowed values: PAYG or AHUB"
-            },
-            "allowedValues": [
-                "PAYG",
-                "AHUB"
-            ],
-            "defaultValue": "PAYG"
-        },
-        "sqlConnectivityType": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL server's connection type.  Allowed values: LOCAL, PRIVATE, PUBLIC"
-            },
-            "allowedValues": [
-                "LOCAL",
-                "PRIVATE",
-                "PUBLIC"
-            ],
-            "defaultValue": "PRIVATE"
-        },
-        "sqlPort": {
-            "type": "int",
-            "metadata": {
-                "description": "The SQL server's port"
-            },
-            "defaultValue": 1433
-        },
-        "sqlAuthUpdateUserName": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL server's login"
-            }
-        },
-        "sqlAuthUpdatePassword": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL server's login passowrd"
-            }
-        },
-        "sqlWorkloadType": {
-            "type": "string",
-            "metadata": {
-                "description": "The SQL server's workload type.  Allowed values:  GENERAL, OLTP, DW"
-            },
-            "allowedValues": [
-                "GENERAL",
-                "OLTP",
-                "DW"
-            ],
-            "defaultValue": "GENERAL"
         }
     },
     "variables": {
@@ -255,28 +141,9 @@
             "sku": {
                 "name": "Premium_LRS"
             },
-            "kind": "StorageV2",
+            "kind": "Storage",
             "properties": {
-                "accessTier": "Hot",
                 "supportsHttpsTrafficOnly": true
-            }
-        },
-        {
-            "type": "Microsoft.Network/publicIPAddresses",
-            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-publicIP')]",
-            "apiVersion": "2018-12-01",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Standard",
-                "tier": "Regional"
-            },
-            "properties": {
-                "publicIPAllocationMethod": "Static",
-                "publicIPAddressVersion": "IPv4"
-            },
-            "copy": {
-                "name": "pubIpLoop",
-                "count": "[parameters('instanceCount')]"
             }
         },
         {
@@ -326,7 +193,7 @@
                 ],
                 "backendAddressPools": [
                     {
-                        "name": "[parameters('loadBalancerBackendPool')]"
+                        "name": "SQL-HA"
                     }
                 ],
                 "loadBalancingRules": [
@@ -344,7 +211,7 @@
                             "enableTcpReset": false,
                             "loadDistribution": "Default",
                             "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/', parameters('loadBalancerBackendPool'))]"
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/SQL-HA')]"
                             },
                             "probe": {
                                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/probes/SQLAlwaysOnEndPointProbe')]"
@@ -365,7 +232,7 @@
                             "enableTcpReset": false,
                             "loadDistribution": "Default",
                             "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/', parameters('loadBalancerBackendPool'))]"
+                                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/SQL-HA')]"
                             },
                             "probe": {
                                 "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/probes/WSFCEndPointProbe')]"
@@ -401,6 +268,24 @@
             ]
         },
         {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-publicIP')]",
+            "apiVersion": "2018-12-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static",
+                "publicIPAddressVersion": "IPv4"
+            },
+            "copy": {
+                "name": "pubIpLoop",
+                "count": "[parameters('instanceCount')]"
+            }
+        },
+        {
             "type": "Microsoft.Network/networkInterfaces",
             "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic')]",
             "apiVersion": "2018-11-01",
@@ -423,7 +308,7 @@
                             },
                             "loadBalancerBackendAddressPools": [
                                 {
-                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/', parameters('loadBalancerBackendPool'))]"
+                                    "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName')), '/backendAddressPools/SQL-HA')]"
                                 }
                             ]
                         }
@@ -431,7 +316,8 @@
                 ]
             },
             "dependsOn": [
-                "pubIpLoop"
+                "pubIpLoop",
+                "[resourceId('Microsoft.Network/loadBalancers', parameters('loadBalancerName'))]"
             ]
         },
         {
@@ -498,99 +384,6 @@
                 }
             },
             "resources": []
-        },
-        {
-            "type": "Microsoft.Compute/virtualMachines/extensions",
-            "apiVersion": "2016-03-30",
-            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')),'/joindomain')]",
-            "location": "[resourceGroup().location]",
-            "copy": {
-                "count": "[parameters('instanceCount')]",
-                "name": "domainJoinLoop"
-            },
-            "properties": {
-                "publisher": "Microsoft.Compute",
-                "type": "JsonADDomainExtension",
-                "typeHandlerVersion": "1.3",
-                "autoUpgradeMinorVersion": true,
-                "settings": {
-                    "Name": "[parameters('domainFqdn')]",
-                    "User": "[concat(parameters('domainFqdn'), '\\', parameters('clusterBootstrapAccount'))]",
-                    "Restart": true,
-                    "Options": "3",
-                    "OUPath": "[parameters('ouPath')]"
-                },
-                "protectedSettings": {
-                    "Password": "[parameters('clusterBootstrapAccountPassword')]"
-                }
-            },
-            "dependsOn": [
-                "vmLoop"
-            ]
-        },
-        {
-            "type": "Microsoft.SqlVirtualMachine/SqlVirtualMachineGroups",
-            "name": "[parameters('FailoverClusterName')]",
-            "apiVersion": "2017-03-01-preview",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "SqlImageOffer": "[parameters('imageOffer')]",
-                "SqlImageSku": "[parameters('imageSku')]",
-                "WsfcDomainProfile": {
-                    "DomainFqdn": "[parameters('domainFqdn')]",
-                    "OuPath": "[parameters('ouPath')]",
-                    "clusterBootstrapAccount": "[parameters('clusterBootstrapAccount')]",
-                    "clusterOperatorAccount": "[parameters('clusterOperatorAccount')]",
-                    "sqlServiceAccount": "[parameters('sqlServiceAccount')]",
-                    "StorageAccountUrl": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').primaryEndpoints['blob']]",
-                    "StorageAccountPrimaryKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('cloudWitnessName')), '2018-07-01').keys[0].value]"
-                }
-            },
-            "dependsOn": [
-                "domainJoinLoop"
-            ]
-        },
-        {
-            "type": "Microsoft.SqlVirtualMachine/SqlVirtualMachines",
-            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
-            "apiVersion": "2017-03-01-preview",
-            "location": "[resourceGroup().location]",
-            "copy": {
-                "count": "[parameters('instanceCount')]",
-                "name": "sqlVmLoop"
-            },
-            "properties": {
-                "virtualMachineResourceId": "[resourceId(resourceGroup().name, 'Microsoft.Compute/virtualMachines', concat(parameters('vmName'), copyindex(parameters('instanceIndex'))))]",
-                "sqlServerLicenseType": "[parameters('sqlServerLicenseType')]",
-                "sqlVirtualMachineGroupResourceId": "[resourceId(resourceGroup().name, 'Microsoft.SqlVirtualMachine/SqlVirtualMachineGroups', parameters('FailoverClusterName'))]",
-                "wsfcDomainCredentials": {
-                    "clusterBootstrapAccountPassword": "[parameters('clusterBootstrapAccountPassword')]",
-                    "clusterOperatorAccountPassword": "[parameters('clusterOperatorAccountPassword')]",
-                    "sqlServiceAccountPassword": "[parameters('sqlServiceAccountPassword')]"
-                },
-                "serverConfigurationsManagementSettings": {
-                    "sqlConnectivityUpdateSettings": {
-                        "connectivityType": "[parameters('sqlConnectivityType')]",
-                        "port": "[parameters('sqlPort')]",
-                        "sqlAuthUpdateUserName": "[parameters('sqlAuthUpdateUserName')]",
-                        "sqlAuthUpdatePassword": "[parameters('sqlAuthUpdatePassword')]"
-                    },
-                    "sqlWorkloadTypeUpdateSettings": {
-                        "sqlWorkloadType": "[parameters('sqlWorkloadType')]"
-                    },
-                    "sqlStorageUpdateSettings": {
-                        "diskCount": "[length(parameters('dataDiskObject'))]",
-                        "diskConfigurationType": "New",
-                        "startingDeviceId": 2
-                    },
-                    "additionalFeaturesServerConfigurations": {
-                        "isRServicesEnabled": false
-                    }
-                }
-            },
-            "dependsOn": [
-                "[resourceId(resourceGroup().name, 'Microsoft.SqlVirtualMachine/SqlVirtualMachineGroups', parameters('FailoverClusterName'))]"
-            ]
         }
     ]
 }
