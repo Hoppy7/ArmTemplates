@@ -1,0 +1,125 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "value": "localadmin"
+        },
+        "adminPassword": {
+            "value": "P@ssword123!"
+        },
+        "imageSku": {
+            "value": "Enterprise"
+        },
+        "imagePublisher": {
+            "value": "MicrosoftSQLServer"
+        },
+        "imageOffer": {
+            "value": "SQL2017-WS2016"
+        },
+        "vmSize": {
+            "value": "Standard_DS3_v2"
+        },
+        "vmName": {
+            "value": "sqlvm0"
+        },
+        "instanceCount": {
+            "value": 2
+        },
+        "instanceIndex": {
+            "value": 1
+        },
+        "vnetResourceGroup": {
+            "value": "RG-Network"
+        },
+        "vnetName": {
+            "value": "VNet-01"
+        },
+        "subnetName": {
+            "value": "Subnet-01"
+        },
+        "dataDiskObject": {
+            "value": [
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                }
+            ]
+        },
+        "cloudWitnessName": {
+            "value": "foobarstorageaccount01"
+        },
+        "availabilitySetName": {
+            "value": "AvSet-SQL-HA-01"
+        },
+        "loadBalancerName": {
+            "value": "ILB-SQL-HA-01"
+        },
+        "loadBalancerIP": {
+            "value": "10.7.7.48"
+        },
+        "loadBalancerBackendPool": {
+            "value": "SQL-HA"
+        },
+        "wsfcIP": {
+            "value": "10.7.7.54"
+        },
+        "failoverClusterName": {
+            "value": "SQLHA01"
+        },
+        "domainFqdn": {
+            "value": "foobar.local"
+        },
+        "ouPath": {
+            "value": "OU=Servers,DC=foobar,DC=local"
+        },
+        "clusterBootstrapAccount": {
+            "value": "domainadmin"
+        },
+        "clusterBootstrapAccountPassword": {
+            "value": "P@ssword123!"
+        },
+        "clusterOperatorAccount": {
+            "value": "domainadmin"
+        },
+        "clusterOperatorAccountPassword": {
+            "value": "P@ssword123!"
+        },
+        "sqlServiceAccount": {
+            "value": "domainadmin"
+        },
+        "sqlServiceAccountPassword": {
+            "value": "P@ssword123!"
+        },
+        "sqlServerLicenseType": {
+            "value": "PAYG"
+        },
+        "sqlConnectivityType": {
+            "value": "PRIVATE"
+        },
+        "sqlPort": {
+            "value": 1433
+        },
+        "sqlAuthUpdateUserName": {
+            "value": "sqladmin"
+        },
+        "sqlAuthUpdatePassword": {
+            "value": "P@ssword123!"
+        },
+        "sqlWorkloadType": {
+            "value": "GENERAL"
+        }
+    }
+}
