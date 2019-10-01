@@ -11,6 +11,9 @@
         },
         "appSettings": {
             "type": "array",
+            "defaultValue": [
+                {"foo": "Bar"}
+            ],
             "metadata": {
                 "description": "Json array containing appSetting key/value pairs"
             }

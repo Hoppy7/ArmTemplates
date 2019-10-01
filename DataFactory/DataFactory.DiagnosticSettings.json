@@ -1,0 +1,71 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataFactoryName": {
+            "type": "string"
+        },
+        "diagnosticSettingsName": {
+            "type": "string"
+        },
+        "retentionThreshold": {
+            "defaultValue": 30,
+            "type": "int"
+        },
+        "logAnalyticsResourceId": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.DataFactory/Factories/Providers/DiagnosticSettings",
+            "name": "[concat(parameters('dataFactoryName'), '/Microsoft.Insights/', parameters('diagnosticSettingsName'))]",
+            "apiVersion": "2017-05-01-preview",
+            "properties": {
+                "name": "[parameters('diagnosticSettingsName')]",
+                "storageAccountId": null,
+                "eventHubAuthorizationRuleId": null,
+                "eventHubName": null,
+                "workspaceId": "[parameters('logAnalyticsResourceId')]",
+                "logs": [
+                    {
+                        "category": "PipelineRuns",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": "[parameters('retentionThreshold')]"
+                        }
+                    },
+                    {
+                        "category": "TriggerRuns",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": "[parameters('retentionThreshold')]"
+                        }
+                    },
+                    {
+                        "category": "ActivityRuns",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": "[parameters('retentionThreshold')]"
+                        }
+                    }
+                ],
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": "[parameters('retentionThreshold')]"
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
