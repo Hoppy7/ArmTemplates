@@ -28,6 +28,7 @@
                 "eventHubAuthorizationRuleId": null,
                 "eventHubName": null,
                 "workspaceId": "[parameters('logAnalyticsResourceId')]",
+                "logAnalyticsDestinationType": "Dedicated",
                 "logs": [
                     {
                         "category": "PipelineRuns",
