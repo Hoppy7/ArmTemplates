@@ -6,12 +6,6 @@ trigger:
 pool:
   vmImage: 'vs2017-win2016'
 steps:
-- task: azsdktm.AzSDK-task.azsk-cicd-armchecker.AzSKARMTemplateChecker@4
-  displayName: 'AzSK_ARMTemplateChecker '
-  inputs:
-    ARMTemplateFilePath: ArmTemplates
-    ARMTemplateParameterFilePath: ArmTemplates
-    recurse: true
 - task: CopyFiles@2
   displayName: 'Copy Files to the Artifact Staging Directory'
   inputs:
