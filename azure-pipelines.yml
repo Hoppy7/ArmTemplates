@@ -11,6 +11,7 @@ steps:
   inputs:
     ARMTemplateFilePath: ArmTemplates
     ARMTemplateParameterFilePath: ArmTemplates
+    recurse: true
 - task: CopyFiles@2
   displayName: 'Copy Files to the Artifact Staging Directory'
   inputs:
