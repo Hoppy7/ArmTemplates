@@ -4,7 +4,7 @@ resources:
 trigger:
 - master
 pool:
-  vmImage: 'Ubuntu-16.04'
+  vmImage: 'vs2017-win2016'
 steps:
 - task: azsdktm.AzSDK-task.azsk-cicd-armchecker.AzSKARMTemplateChecker@4
   displayName: 'AzSK_ARMTemplateChecker '
