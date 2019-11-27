@@ -1,12 +1,16 @@
 # Hoppy7/ArmTemplates
-
+resources:
+- repo: self
 trigger:
 - master
-
 pool:
   vmImage: 'Ubuntu-16.04'
-
 steps:
+- task: azsdktm.AzSDK-task.azsk-cicd-armchecker.AzSKARMTemplateChecker@4
+  displayName: 'AzSK_ARMTemplateChecker '
+  inputs:
+    ARMTemplateFilePath: ArmTemplates
+    ARMTemplateParameterFilePath: ArmTemplates
 - task: CopyFiles@2
   displayName: 'Copy Files to the Artifact Staging Directory'
   inputs:
