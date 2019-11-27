@@ -3,7 +3,10 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "adminUsername": {
-            "value": "iAmTheAdminNow"
+            "value": "localadmin"
+        },
+        "adminPassword": {
+            "value": "P@ssword123!"
         },
         "imageSku": {
             "value": "2016-Datacenter"
@@ -18,22 +21,25 @@
             "value": "Standard_DS1_v2"
         },
         "vmName": {
-            "value": "demovm0"
+            "value": "vmfoobar0"
         },
         "instanceCount": {
-            "value": 2
+            "value": 1
         },
         "instanceIndex": {
             "value": 1
         },
+        "availabilitySetName": {
+            "value": "AVset-Foobar"
+        },
         "vnetResourceGroup": {
-            "value": "RG-Network"
+            "value": "RG-Foobar"
         },
         "vnetName": {
-            "value": "VNet-01"
+            "value": "Vnet-Foobar"
         },
         "subnetName": {
-            "value": "Subnet-01"
+            "value": "Subnet-Foobar-01"
         },
         "dataDiskObject": {
             "value": [
