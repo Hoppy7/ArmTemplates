@@ -1,0 +1,82 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflowName": {
+            "type": "String",
+            "defaultValue": "foobar",
+            "metadata": {
+                "description": "The name of the Logic App"
+            }
+        },
+        "omsWorkspaceResourceId": {
+            "type": "String",
+            "metadata": {
+                "description": "The resourceId of the Log Analytics workspace used by the diagnostic setting"
+            }
+        }
+    },
+    "variables": {
+        "diagSettingName": "[concat(parameters('workflowName'), '-diagSetting')]",
+        "omsRetentionDays": 30
+        
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2016-10-01",
+            "name": "[parameters('workflowName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "definition": {
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "actions": {},
+                    "triggers": {},
+                    "outputs": {},
+                    "$schema": "'https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#'"
+                },
+                "parameters": {},
+                "state": "Enabled"
+            },
+            "resources": [
+                {
+                    "type": "providers/diagnosticSettings",
+                    "apiVersion": "2017-05-01-preview",
+                    "name": "[concat('microsoft.insights/', variables('diagSettingName'))]",
+                    "dependsOn": [
+                        "[concat('Microsoft.Logic/workflows/', parameters('workflowName'))]"
+                    ],
+                    "properties": {
+                        "storageAccountId": null,
+                        "serviceBusRuleId": null,
+                        "workspaceId": "[parameters('omsWorkspaceResourceId')]",
+                        "eventHubAuthorizationRuleId": null,
+                        "eventHubName": null,
+                        "metrics": [
+                            {
+                                "timeGrain": "AllMetrics",
+                                "category": "AllMetrics",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                    "enabled": true,
+                                    "days": "[variables('omsRetentionDays')]"
+                                }
+                            }
+                        ],
+                        "logs": [
+                            {
+                                "category": "WorkflowRuntime",
+                                "enabled": true,
+                                "retentionPolicy": {
+                                    "enabled": true,
+                                    "days": "[variables('omsRetentionDays')]"
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}
