@@ -52,7 +52,8 @@
       "type": "Microsoft.Network/routeTables",
       "name": "[parameters('spokeVnets').subnets[copyindex()].udrName]",
       "location": "[resourceGroup().location]",
-      "tags": {},
+      "tags": {
+      },
       "copy": {
         "name": "udrLoop",
         "count": "[length(parameters('spokeVnets').subnets)]"
@@ -71,14 +72,15 @@
       }
     },
     {
-      "apiVersion": "2015-06-15",
+      "apiVersion": "2018-12-01",
       "type": "Microsoft.Network/virtualNetworks",
       "name": "[parameters('spokeVnets').vnetName]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
         "udrLoop"
       ],
-      "tags": {},
+      "tags": {
+      },
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
@@ -93,6 +95,62 @@
               "name": "[parameters('spokeVnets').subnets[copyindex('subnets')].subnetName]",
               "properties": {
                 "addressPrefix": "[parameters('spokeVnets').subnets[copyindex('subnets')].SubnetPrefix]",
+                "serviceEndpoints": [
+                  {
+                    "service": "Microsoft.AzureActiveDirectory",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.AzureCosmosDB",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.ContainerRegistry",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.EventHub",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.KeyVault",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.ServiceBus",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.Sql",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.Storage",
+                    "locations": [
+                      "*"
+                    ]
+                  },
+                  {
+                    "service": "Microsoft.Web",
+                    "locations": [
+                      "*"
+                    ]
+                  }
+                ],
                 "routeTable": {
                   "id": "[resourceId('Microsoft.Network/routeTables', parameters('spokeVnets').subnets[copyindex('subnets')].udrName)]"
                 }
@@ -131,8 +189,10 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
-          "parameters": {},
-          "variables": {},
+          "parameters": {
+          },
+          "variables": {
+          },
           "resources": [
             {
               "apiVersion": "2019-04-01",
@@ -151,7 +211,8 @@
             }
           ]
         },
-        "parameters": {}
+        "parameters": {
+        }
       },
       "dependsOn": [
         "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', parameters('spokeVnets').vnetName, 'virtualNetworkPeerings')]"
