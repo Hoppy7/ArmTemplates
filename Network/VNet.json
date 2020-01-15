@@ -33,7 +33,8 @@
             }
         }
     },
-    "variables": {},
+    "variables": {
+    },
     "resources": [
         {
             "type": "Microsoft.Network/virtualNetworks",
@@ -42,9 +43,8 @@
             "location": "[resourceGroup().location]",
             "properties": {
                 "dhcpOptions": {
-                    "dnsServers": [
-                        "[parameters('dnsServers')]"
-                    ]
+                    "dnsServers": "[parameters('dnsServers')]"
+                    
                 },
                 "addressSpace": {
                     "addressPrefixes": [
@@ -104,17 +104,26 @@
                                     "locations": [
                                         "*"
                                     ]
+                                },
+                                {
+                                    "service": "Microsoft.Web",
+                                    "locations": [
+                                        "*"
+                                    ]
                                 }
                             ],
-                            "delegations": []
+                            "delegations": [
+                            ]
                         }
                     }
                 ],
-                "virtualNetworkPeerings": [],
+                "virtualNetworkPeerings": [
+                ],
                 "enableDdosProtection": false,
                 "enableVmProtection": false
             },
-            "dependsOn": []
+            "dependsOn": [
+            ]
         }
     ]
 }
