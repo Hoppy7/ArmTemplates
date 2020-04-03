@@ -42,7 +42,7 @@ function Invoke-ArmTemplateCiBuild {
 
             foreach ($armT in $armTemplates) {
 
-                it "$($armT.Name)" {
+                it "$($armT.FullName)" {
 
                     $deploySplat = @{};
                     $deploySplat.Add("Mode", "Complete");

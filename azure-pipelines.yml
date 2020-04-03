@@ -73,7 +73,7 @@ stages:
       inputs:
         sourceFolder: $(Build.SourcesDirectory)
         contents: |
-          *.json
+          **.json
         targetFolder: $(Build.ArtifactStagingDirectory)
 
     - task: PublishBuildArtifacts@1
