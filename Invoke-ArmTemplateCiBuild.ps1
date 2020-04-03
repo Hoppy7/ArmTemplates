@@ -34,7 +34,6 @@ function Invoke-ArmTemplateCiBuild {
     #$path = "$(Build.SourcesDirectory)\ArmTemplates";
     $directory = Get-ChildItem -Path $path -Recurse -Force;
     $uniqueDirs = $directory.directory | Select-Object -Unique;
-    $uniqueDirs
 
     describe "armTemplateValidation" {
         foreach ($dir in $uniqueDirs) {
