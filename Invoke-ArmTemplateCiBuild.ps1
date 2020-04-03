@@ -33,10 +33,10 @@ function Invoke-ArmTemplateCiBuild {
 
     #$path = "$(Build.SourcesDirectory)\ArmTemplates";
     $directory = Get-ChildItem -Path $path -Recurse -Force;
-    $directory = $directory.directory | Select-Object -Unique;
+    $uniqueDirs = $directory.directory | Select-Object -Unique;
 
     describe "armTemplateValidation" {
-        foreach ($dir in $directory) {
+        foreach ($dir in $uniqueDirs) {
 
             $armTemplates = Get-ChildItem -Path $dir.Fullname -Filter "*.json" -Exclude "*$paramFileSuffix*" -Recurse -Depth 0 -Force;
 
