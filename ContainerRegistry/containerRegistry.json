@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "acrName": {
+            "type": "string",
+            "defaultValue": "rohopkin",
+            "minLength": 5,
+            "maxLength": 50,
+            "metadata": {
+                "description": "The Name of the container registry"
+            }
+        },
+        "acrAdminUserEnabled": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "The value that indicates whether the admin user is enabled"
+            }
+        },
+        "acrSku": {
+            "type": "string",
+            "metadata": {
+                "description": "The tier of the continer rgistry"
+            },
+            "defaultValue": "Basic",
+            "allowedValues": [
+                "Basic",
+                "Standard",
+                "Premium"
+            ]
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "registries": "2019-05-01"
+        },
+        "prefixes": {
+            "containerRegistry": "acr"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+            "name": "[concat(variables('prefixes').containerRegistry, parameters('acrName'))]",
+            "apiVersion": "[variables('apiVersions').registries]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('acrSku')]",
+                "tier": "[parameters('acrSku')]"
+            },
+            "properties": {
+                "adminUserEnabled": "[parameters('acrAdminUserEnabled')]"
+            }
+        }
+    ],
+    "outputs": {
+        "acrLoginServer": {
+            "value": "[reference(resourceId('Microsoft.ContainerRegistry/registries',concat(variables('prefixes').containerRegistry, parameters('acrName'))),'2019-05-01').loginServer]",
+            "type": "string"
+        }
+    }
+}

@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "sqlServerName": {
-            "defaultValue": "foobarSqlServer",
+            "defaultValue": "foobarSQL",
             "type": "string",
             "metadata": {
                 "description": "The name of the SQL server instance"
@@ -57,28 +57,39 @@
             ]
         }
     },
-    "variables": {},
+    "variables": {
+        "apiVersions": {
+            "sql": "2018-06-01-preview",
+            "firewallRules": "2015-05-01-preview"
+        },
+        "prefixes": {
+            "sql": "sql-"
+        }
+    },
     "resources": [
         {
             "type": "Microsoft.Sql/servers",
-            "name": "[parameters('sqlServerName')]",
-            "apiVersion": "2018-06-01-preview",
+            "name": "[concat(variables('prefixes').sql, parameters('sqlServerName'))]",
+            "apiVersion": "[variables('apiVersions').sql]",
             "kind": "v12.0",
             "location": "[resourceGroup().location]",
-            "tags": {},
+            "tags": {
+            },
             "properties": {
                 "administratorLogin": "[parameters('sqlServerLogin')]",
                 "administratorLoginPassword": "[parameters('sqlServerLoginPassword')]",
                 "version": "12.0"
             },
-            "dependsOn": []
+            "dependsOn": [
+            ]
         },
         {
             "type": "Microsoft.Sql/servers/databases",
-            "name": "[concat(parameters('sqlServerName'), '/', parameters('databaseObject')[copyindex()].databaseName)]",
-            "apiVersion": "2017-10-01-preview",
+            "name": "[concat(variables('prefixes').sql, parameters('sqlServerName'), '/', parameters('databaseObject')[copyindex()].databaseName)]",
+            "apiVersion": "[variables('apiVersions').sql]",
             "location": "[resourceGroup().location]",
-            "tags": {},
+            "tags": {
+            },
             "copy": {
                 "name": "dbLoop",
                 "count": "[length(parameters('databaseObject'))]"
@@ -95,13 +106,13 @@
                 "zoneRedundant": "[parameters('databaseObject')[copyindex()].properties.zoneRedundant]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                "[resourceId('Microsoft.Sql/servers', concat(variables('prefixes').sql, parameters('sqlServerName')))]"
             ]
         },
         {
             "type": "Microsoft.Sql/servers/firewallRules",
-            "name": "[concat(parameters('sqlServerName'), '/', parameters('firewallRulesObject')[copyindex()].ruleName)]",
-            "apiVersion": "2015-05-01-preview",
+            "name": "[concat(variables('prefixes').sql, parameters('sqlServerName'), '/', parameters('firewallRulesObject')[copyindex()].ruleName)]",
+            "apiVersion": "[variables('apiVersions').firewallRules]",
             "location": "[resourceGroup().location]",
             "copy": {
                 "name": "firewallLoop",
@@ -112,7 +123,7 @@
                 "endIpAddress": "[parameters('firewallRulesObject')[copyindex()].endIpAddress]"
             },
             "dependsOn": [
-                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                "[resourceId('Microsoft.Sql/servers', concat(variables('prefixes').sql, parameters('sqlServerName')))]"
             ]
         }
     ]

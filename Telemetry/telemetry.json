@@ -1,0 +1,67 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appInsightsName": {
+            "defaultValue": "rohopkin",
+            "type": "String"
+        },
+        "omsName": {
+            "defaultValue": "rohopkin",
+            "type": "String"
+        },
+        "oaasName": {
+            "defaultValue": "rohopkin",
+            "type": "String"
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "insights": "2015-05-01",
+            "oaas": "2015-10-31",
+            "oms": "2015-11-01-preview"
+        },
+        "prefixes": {
+            "insights": "appn-",
+            "oms": "log-",
+            "oaas": "oaas-"
+        },
+        "omsRetention": 30
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Insights/components",
+            "name": "[concat(variables('prefixes').insights, parameters('appInsightsName'))]",
+            "apiVersion": "[variables('apiVersions').insights]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Flow_Type": "Bluefield"
+            }
+        },
+        {
+            "type": "microsoft.operationalinsights/workspaces",
+            "name": "[concat(variables('prefixes').oms, parameters('omsName'))]",
+            "apiVersion": "[variables('apiVersions').oms]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "pergb2018"
+                },
+                "retentionInDays": "[variables('omsRetention')]"
+            }
+        },
+        {
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[concat(variables('prefixes').oaas, parameters('oaasName'))]",
+            "apiVersion": "[variables('apiVersions').oaas]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "sku": {
+                    "name": "Basic"
+                }
+            }
+        }
+    ]
+}

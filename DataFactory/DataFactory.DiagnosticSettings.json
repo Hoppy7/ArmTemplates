@@ -3,32 +3,40 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "dataFactoryName": {
-            "type": "string"
-        },
-        "diagnosticSettingsName": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "rohopkin"
         },
         "retentionThreshold": {
-            "defaultValue": 30,
-            "type": "int"
+            "type": "int",
+            "defaultValue": 30
+
         },
         "logAnalyticsResourceId": {
-            "type": "string"
+            "type": "string",
+            "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourcegroups/rg-mgmt/providers/microsoft.operationalinsights/workspaces/oms-sandboxr"
         }
     },
-    "variables": {},
+    "variables": {
+        "apiVersions": {
+            "diagSetting": "2017-05-01-preview"
+        },
+        "prefixes": {
+            "diagSetting": "-diagSetting"
+        },
+        "logAnalyticsDestinationType": "Dedicated"
+    },
     "resources": [
         {
             "type": "Microsoft.DataFactory/Factories/Providers/DiagnosticSettings",
-            "name": "[concat(parameters('dataFactoryName'), '/Microsoft.Insights/', parameters('diagnosticSettingsName'))]",
-            "apiVersion": "2017-05-01-preview",
+            "name": "[concat(parameters('dataFactoryName'), '/Microsoft.Insights/', concat(parameters('dataFactoryName'), variables('prefixes').diagSetting))]",
+            "apiVersion": "[variables('apiVersions').diagsetting]",
             "properties": {
-                "name": "[parameters('diagnosticSettingsName')]",
+                "name": "[concat(parameters('dataFactoryName'), variables('prefixes').diagSetting)]",
                 "storageAccountId": null,
                 "eventHubAuthorizationRuleId": null,
                 "eventHubName": null,
                 "workspaceId": "[parameters('logAnalyticsResourceId')]",
-                "logAnalyticsDestinationType": "Dedicated",
+                "logAnalyticsDestinationType": "[variables('logAnalyticsDestinationType')]",
                 "logs": [
                     {
                         "category": "PipelineRuns",

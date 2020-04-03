@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "adminUsername": {
@@ -9,7 +9,7 @@
             "value": "P@ssword123!"
         },
         "imageSku": {
-            "value": "2016-Datacenter"
+            "value": "2019-Datacenter"
         },
         "imagePublisher": {
             "value": "MicrosoftWindowsServer"
@@ -18,10 +18,10 @@
             "value": "WindowsServer"
         },
         "vmSize": {
-            "value": "Standard_DS1_v2"
+            "value": "Standard_DS2_v2"
         },
         "vmName": {
-            "value": "vmfoobar0"
+            "value": "vmdev0"
         },
         "instanceCount": {
             "value": 1
@@ -29,17 +29,14 @@
         "instanceIndex": {
             "value": 1
         },
-        "availabilitySetName": {
-            "value": "AVset-Foobar"
-        },
         "vnetResourceGroup": {
-            "value": "RG-Foobar"
+            "value": "RG-Network"
         },
         "vnetName": {
-            "value": "Vnet-Foobar"
+            "value": "VNET-DMZ-01"
         },
         "subnetName": {
-            "value": "Subnet-Foobar-01"
+            "value": "DMZ-01-Subnet-01"
         },
         "dataDiskObject": {
             "value": [

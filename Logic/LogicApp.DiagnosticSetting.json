@@ -11,39 +11,50 @@
         },
         "omsWorkspaceResourceId": {
             "type": "String",
+            "defaultValue": "foobar",
             "metadata": {
                 "description": "The resourceId of the Log Analytics workspace used by the diagnostic setting"
             }
         }
     },
     "variables": {
-        "diagSettingName": "[concat(parameters('workflowName'), '-diagSetting')]",
+        "apiVersions": {
+            "diagnosticSettings": "2017-05-01-preview",
+            "workflows": "2016-10-01"
+        },
+        "prefixes": {
+            "diagSetting": "-diagSetting"
+        },
         "omsRetentionDays": 30
-        
     },
     "resources": [
         {
             "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2016-10-01",
+            "apiVersion": "[variables('apiVersions').workflows]",
             "name": "[parameters('workflowName')]",
             "location": "[resourceGroup().location]",
             "properties": {
                 "definition": {
                     "contentVersion": "1.0.0.0",
-                    "parameters": {},
-                    "actions": {},
-                    "triggers": {},
-                    "outputs": {},
+                    "parameters": {
+                    },
+                    "actions": {
+                    },
+                    "triggers": {
+                    },
+                    "outputs": {
+                    },
                     "$schema": "'https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#'"
                 },
-                "parameters": {},
+                "parameters": {
+                },
                 "state": "Enabled"
             },
             "resources": [
                 {
                     "type": "providers/diagnosticSettings",
-                    "apiVersion": "2017-05-01-preview",
-                    "name": "[concat('microsoft.insights/', variables('diagSettingName'))]",
+                    "apiVersion": "[variables('apiVersions').diagnosticSettings]",
+                    "name": "[concat('microsoft.insights/', concat(parameters('workflowName'), variables('prefixes').diagSetting))]",
                     "dependsOn": [
                         "[concat('Microsoft.Logic/workflows/', parameters('workflowName'))]"
                     ],

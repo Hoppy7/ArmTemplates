@@ -16,7 +16,7 @@
     },
     "imageSku": {
       "type": "string",
-      "defaultValue": "2016-Datacenter",
+      "defaultValue": "2019-Datacenter",
       "metadata": {
         "description": "The image sku"
       }
@@ -63,12 +63,6 @@
         "description": "The VM's starting index.  e.g. instanceIndex = 1 - testvm01  e.g. instanceIndex = 4 - testvm04"
       }
     },
-    "availabilitySetName": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the availability set to add the VMs to"
-      }
-    },
     "vnetResourceGroup": {
       "type": "string",
       "metadata": {
@@ -105,25 +99,34 @@
     }
   },
   "variables": {
-    "vnetId": "[resourceid(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
-    "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]"
+    "apiVersions": {
+      "compute": "2019-07-01",
+      "network": "2019-09-01"
+    },
+    "prefixes": {
+      "": ""
+    },
+    "vnetResourceId": "[resourceid(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+    "subnetResourceId": "[concat(variables('vnetResourceId'), '/subnets/', parameters('subnetName'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.Compute/availabilitySets",
-      "name": "[parameters('availabilitySetName')]",
-      "apiVersion": "2016-04-30-preview",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[concat('PUBIP-', parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+      "apiVersion": "[variables('apiVersions').network]",
       "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "pubipLoop",
+        "count": "[parameters('instanceCount')]"
+      },
       "properties": {
-        "platformFaultDomainCount": 2,
-        "platformUpdateDomainCount": 2,
-        "managed": true
+        "publicIPAllocationMethod": "Dynamic"
       }
     },
     {
-      "apiVersion": "2018-11-01",
       "type": "Microsoft.Network/networkInterfaces",
-      "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic')]",
+      "name": "[concat('NIC-', parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+      "apiVersion": "[variables('apiVersions').network]",
       "location": "[resourceGroup().location]",
       "copy": {
         "name": "nicLoop",
@@ -132,36 +135,38 @@
       "properties": {
         "ipConfigurations": [
           {
-            "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-ipConfig')]",
+            "name": "[concat('IPCONFIG-', parameters('vmName'), copyindex(parameters('instanceIndex')))]",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat('PUBIP-', parameters('vmName'), copyindex(parameters('instanceIndex'))))]"
+              },
               "subnet": {
-                "id": "[variables('subnetRef')]"
+                "id": "[variables('subnetResourceId')]"
               }
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', concat('PUBIP-', parameters('vmName'), copyindex(parameters('instanceIndex'))))]"
+      ]
     },
     {
-      "apiVersion": "2018-10-01",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
+      "apiVersion": "[variables('apiVersions').compute]",
+      "location": "[resourceGroup().location]",
       "copy": {
         "count": "[parameters('instanceCount')]",
         "name": "vmLoop"
       },
-      "location": "[resourceGroup().location]",
       "dependsOn": [
-        "nicLoop",
-        "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]"
+        "nicLoop"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
-        },
-        "availabilitySet": {
-          "id": "[resourceId('Microsoft.Compute/availabilitySets',parameters('availabilitySetName'))]"
         },
         "osProfile": {
           "computerName": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')))]",
@@ -188,7 +193,7 @@
                 "caching": "[parameters('dataDiskObject')[copyIndex('dataDisks')].caching]",
                 "diskSizeGB": "[parameters('dataDiskObject')[copyIndex('dataDisks')].diskSizeGB]",
                 "lun": "[copyIndex('dataDisks')]",
-                "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-dataDisk', copyindex('dataDisks'))]",
+                "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-DATADISK', copyindex('dataDisks'))]",
                 "createOption": "Empty"
               }
             }
@@ -197,7 +202,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-nic'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat('NIC-', parameters('vmName'), copyindex(parameters('instanceIndex'))))]"
             }
           ]
         },
@@ -207,7 +212,8 @@
           }
         }
       },
-      "resources": []
+      "resources": [
+      ]
     }
   ]
 }

@@ -2,158 +2,117 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "spokeVnets": {
+    "spokeVnetObject": {
       "type": "object",
       "defaultValue": {
-        "vnetName": "VNET-DMZ",
-        "vnetPrefix": "192.168.0.0/16",
+        "vnetName": "VNET-DMZ-02",
+        "vnetPrefix": "10.0.32.0/20",
         "subnets": [
           {
-            "subnetName": "DMZ",
-            "SubnetPrefix": "192.168.0.0/24",
-            "udrName": "UDR-DMZ",
-            "udrNextHopIP": "192.168.0.4"
+            "subnetName": "DMZ-02-Subnet-01",
+            "subnetPrefix": "10.0.32.0/26"
           },
           {
-            "subnetName": "FrontEnd",
-            "SubnetPrefix": "192.168.1.0/24",
-            "udrName": "UDR-FrontEnd",
-            "udrNextHopIP": "192.168.0.4"
+            "subnetName": "DMZ-02-Subnet-02",
+            "subnetPrefix": "10.0.32.64/26"
           },
           {
-            "subnetName": "BackEnd",
-            "SubnetPrefix": "192.168.2.0/24",
-            "udrName": "UDR-BackEnd",
-            "udrNextHopIP": "192.168.0.4"
+            "subnetName": "DMZ-02-Subnet-03",
+            "subnetPrefix": "10.0.32.128/26"
+          },
+          {
+            "subnetName": "DMZ-02-Subnet-04",
+            "subnetPrefix": "10.0.32.192/26"
           }
         ]
       },
       "metadata": {
-        "description": "Name for the new VNet."
+        "description": "JSON object representing the spoke VNet"
       }
     },
-    "hubVnetResourceId": {
+    "peeredVnetResourceId": {
       "type": "string",
+      "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9000000/resourceGroups/RG-Network/providers/Microsoft.Network/virtualNetworks/VNET-DMZ-01",
       "metadata": {
         "description": "The ResourceId of the hub vnet used for peering"
       }
     }
   },
   "variables": {
-    "hubSubscriptionId": "[split(parameters('hubVnetResourceId'), '/')[2]]",
-    "hubResourceGroup": "[split(parameters('hubVnetResourceId'), '/')[4]]",
-    "hubVnetName": "[split(parameters('hubVnetResourceId'), '/')[8]]",
+    "apiVersions": {
+      "deployments": "2017-05-10",
+      "virtualNetworks": "2019-11-01",
+      "virtualNetworkPeerings": "2019-04-01"
+    },
+    "peeredVnetSubId": "[split(parameters('peeredVnetResourceId'), '/')[2]]",
+    "peeredVnetRg": "[split(parameters('peeredVnetResourceId'), '/')[4]]",
+    "peeredVnetName": "[split(parameters('peeredVnetResourceId'), '/')[8]]",
     "spokeSubscriptionId": "[subscription().subscriptionId]",
-    "spokeResourceGroup": "[resourceGroup().name]"
+    "spokeResourceGroup": "[resourceGroup().name]",
+    "serviceEndpointLocations": [
+      "*"
+    ]
   },
   "resources": [
     {
-      "apiVersion": "2015-06-15",
-      "type": "Microsoft.Network/routeTables",
-      "name": "[parameters('spokeVnets').subnets[copyindex()].udrName]",
-      "location": "[resourceGroup().location]",
-      "tags": {
-      },
-      "copy": {
-        "name": "udrLoop",
-        "count": "[length(parameters('spokeVnets').subnets)]"
-      },
-      "properties": {
-        "routes": [
-          {
-            "name": "Route-To-Hub",
-            "properties": {
-              "addressPrefix": "[parameters('spokeVnets').subnets[copyindex()].SubnetPrefix]",
-              "nextHopType": "VirtualAppliance",
-              "nextHopIpAddress": "[parameters('spokeVnets').subnets[copyindex()].udrNextHopIP]"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "apiVersion": "2018-12-01",
+      "apiVersion": "[variables('apiVersions').virtualNetworks]",
       "type": "Microsoft.Network/virtualNetworks",
-      "name": "[parameters('spokeVnets').vnetName]",
+      "name": "[parameters('spokeVnetObject').vnetName]",
       "location": "[resourceGroup().location]",
-      "dependsOn": [
-        "udrLoop"
-      ],
       "tags": {
       },
       "properties": {
         "addressSpace": {
           "addressPrefixes": [
-            "[parameters('spokeVnets').vnetPrefix]"
+            "[parameters('spokeVnetObject').vnetPrefix]"
           ]
         },
         "copy": [
           {
             "name": "subnets",
-            "count": "[length(parameters('spokeVnets').subnets)]",
+            "count": "[length(parameters('spokeVnetObject').subnets)]",
             "input": {
-              "name": "[parameters('spokeVnets').subnets[copyindex('subnets')].subnetName]",
+              "name": "[parameters('spokeVnetObject').subnets[copyindex('subnets')].subnetName]",
               "properties": {
-                "addressPrefix": "[parameters('spokeVnets').subnets[copyindex('subnets')].SubnetPrefix]",
+                "addressPrefix": "[parameters('spokeVnetObject').subnets[copyindex('subnets')].subnetPrefix]",
                 "serviceEndpoints": [
                   {
                     "service": "Microsoft.AzureActiveDirectory",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.AzureCosmosDB",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.ContainerRegistry",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.EventHub",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.KeyVault",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.ServiceBus",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.Sql",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.Storage",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   },
                   {
                     "service": "Microsoft.Web",
-                    "locations": [
-                      "*"
-                    ]
+                    "locations": "[variables('serviceEndpointLocations')]"
                   }
-                ],
-                "routeTable": {
-                  "id": "[resourceId('Microsoft.Network/routeTables', parameters('spokeVnets').subnets[copyindex('subnets')].udrName)]"
-                }
+                ]
               }
             }
           }
@@ -161,12 +120,12 @@
       }
     },
     {
-      "apiVersion": "2019-04-01",
+      "apiVersion": "[variables('apiVersions').virtualNetworks]",
       "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-      "name": "[concat(parameters('spokeVnets').vnetName, '/virtualNetworkPeerings')]",
+      "name": "[concat(parameters('spokeVnetObject').vnetName, '/virtualNetworkPeerings')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/virtualNetworks/', parameters('spokeVnets').vnetName)]"
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('spokeVnetObject').vnetName)]"
       ],
       "properties": {
         "allowVirtualNetworkAccess": true,
@@ -174,16 +133,16 @@
         "allowGatewayTransit": false,
         "useRemoteGateways": false,
         "remoteVirtualNetwork": {
-          "id": "[parameters('hubVnetResourceId')]"
+          "id": "[parameters('peeredVnetResourceId')]"
         }
       }
     },
     {
-      "apiVersion": "2017-05-10",
+      "apiVersion": "[variables('apiVersions').deployments]",
       "name": "nestedTemplate",
       "type": "Microsoft.Resources/deployments",
-      "resourceGroup": "[variables('hubResourceGroup')]",
-      "subscriptionId": "[variables('hubSubscriptionId')]",
+      "resourceGroup": "[variables('peeredVnetRg')]",
+      "subscriptionId": "[variables('peeredVnetSubId')]",
       "properties": {
         "mode": "Incremental",
         "template": {
@@ -197,7 +156,7 @@
             {
               "apiVersion": "2019-04-01",
               "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
-              "name": "[concat(variables('hubVnetName'), '/virtualNetworkPeerings')]",
+              "name": "[concat(variables('peeredVnetName'), '/virtualNetworkPeerings')]",
               "location": "[resourceGroup().location]",
               "properties": {
                 "allowVirtualNetworkAccess": true,
@@ -205,17 +164,15 @@
                 "allowGatewayTransit": false,
                 "useRemoteGateways": false,
                 "remoteVirtualNetwork": {
-                  "id": "[resourceId(variables('spokeSubscriptionId'), variables('spokeResourceGroup'), 'Microsoft.Network/virtualNetworks',  parameters('spokeVnets').vnetName)]"
+                  "id": "[resourceId(variables('spokeSubscriptionId'), variables('spokeResourceGroup'), 'Microsoft.Network/virtualNetworks',  parameters('spokeVnetObject').vnetName)]"
                 }
               }
             }
           ]
-        },
-        "parameters": {
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', parameters('spokeVnets').vnetName, 'virtualNetworkPeerings')]"
+        "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', parameters('spokeVnetObject').vnetName, 'virtualNetworkPeerings')]"
       ]
     }
   ]

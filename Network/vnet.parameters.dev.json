@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vnetObject": {
+            "value": [
+                {
+                    "vnetName": "VNET-MGMT-01",
+                    "vnetCidr": "10.0.0.0/24",
+                    "peeredVnetResourceId": null,
+                    "subnets": [
+                        {
+                            "subnetName": "MGMT-01-Subnet-01",
+                            "subnetCidr": "10.0.0.0/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "MGMT-01-Subnet-02",
+                            "subnetCidr": "10.0.0.64/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "MGMT-01-Subnet-03",
+                            "subnetCidr": "10.0.0.128/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "MGMT-01-Subnet-04",
+                            "subnetCidr": "10.0.0.192/26",
+                            "nsgName": "NSG-Rohopkin"
+                        }
+                    ]
+                },
+                {
+                    "vnetName": "VNET-DMZ-01",
+                    "vnetCidr": "10.0.16.0/20",
+                    "peeredVnetResourceId": null,
+                    "subnets": [
+                        {
+                            "subnetName": "DMZ-01-Subnet-01",
+                            "subnetCidr": "10.0.16.0/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-01-Subnet-02",
+                            "subnetCidr": "10.0.16.64/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-01-Subnet-03",
+                            "subnetCidr": "10.0.16.128/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-01-Subnet-04",
+                            "subnetCidr": "10.0.16.192/26",
+                            "nsgName": "NSG-Rohopkin"
+                        }
+                    ]
+                },
+                {
+                    "vnetName": "VNET-DMZ-02",
+                    "vnetCidr": "10.0.32.0/20",
+                    "peeredVnetResourceId": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9000000/resourceGroups/RG-Network/providers/Microsoft.Network/virtualNetworks/VNET-DMZ-01",
+                    "subnets": [
+                        {
+                            "subnetName": "DMZ-02-Subnet-01",
+                            "subnetCidr": "10.0.32.0/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-02-Subnet-02",
+                            "subnetCidr": "10.0.32.64/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-02-Subnet-03",
+                            "subnetCidr": "10.0.32.128/26",
+                            "nsgName": "NSG-Rohopkin"
+                        },
+                        {
+                            "subnetName": "DMZ-02-Subnet-04",
+                            "subnetCidr": "10.0.32.192/26",
+                            "nsgName": "NSG-Rohopkin"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

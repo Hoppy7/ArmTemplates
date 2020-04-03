@@ -1,0 +1,42 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "sqlServerName": {
+            "value": "foobarSQL"
+        },
+        "sqlServerLogin": {
+            "value": "sqladmin"
+        },
+        "sqlServerLoginPassword": {
+            "value": "P@ssword123!"
+        },
+        "databaseObject": {
+            "value": [
+                {
+                    "databaseName": "fooBar",
+                    "sku": {
+                        "name": "S0",
+                        "tier": "Standard"
+                    },
+                    "kind": "v12.0,user",
+                    "properties": {
+                        "collation": "SQL_Latin1_General_CP1_CI_AS",
+                        "maxSizeBytes": 268435456000,
+                        "catalogCollation": "SQL_Latin1_General_CP1_CI_AS",
+                        "zoneRedundant": false
+                    }
+                }
+            ]
+        },
+        "firewallRulesObject": {
+            "value": [
+                {
+                    "ruleName": "AllowAllWindowsAzureIps",
+                    "startIpAddress": "255.255.255.255",
+                    "endIpAddress": "255.255.255.255"
+                }
+            ]
+        }
+    }
+}

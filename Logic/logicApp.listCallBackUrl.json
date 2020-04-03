@@ -1,0 +1,101 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "logicApp_HTTP_Post_name": {
+            "defaultValue": "HTTP-Post",
+            "type": "string"
+        },
+        "logicApp_Webhook_Trigger_name": {
+            "defaultValue": "Webhook-Trigger",
+            "type": "string"
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "workflow": "2017-07-01"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "name": "[parameters('logicApp_HTTP_Post_name')]",
+            "apiVersion": "[variables('apiVersions').workflow]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                    },
+                    "triggers": {
+                        "Recurrence": {
+                            "recurrence": {
+                                "frequency": "Hour",
+                                "interval": 1
+                            },
+                            "type": "Recurrence"
+                        }
+                    },
+                    "actions": {
+                        "HTTP": {
+                            "runAfter": {
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "body": {
+                                    "foo": "bar"
+                                },
+                                "method": "POST",
+                                "uri": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows/', parameters('logicApp_Webhook_Trigger_name')), '/triggers/manual'), '2016-06-01').value]"
+                            }
+                        }
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Logic/workflows",
+            "name": "[parameters('logicApp_Webhook_Trigger_name')]",
+            "apiVersion": "[variables('apiVersions').workflow]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                    },
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "method": "POST",
+                                "schema": {
+                                    "properties": {
+                                        "foo": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "actions": {
+                    },
+                    "outputs": {
+                    }
+                },
+                "parameters": {
+                }
+            }
+        }
+    ]
+}

@@ -1,129 +1,260 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "vnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The vnet's name"
-            }
-        },
-        "vnetCidr": {
-            "type": "string",
-            "metadata": {
-                "description": "The vnet's address range as a CIDR block"
-            }
-        },
-        "subnetName": {
-            "type": "string",
-            "metadata": {
-                "description": "The subnet's name"
-            }
-        },
-        "subnetCidr": {
-            "type": "string",
-            "metadata": {
-                "description": "The subnet's address range as a CIDR block"
-            }
-        },
-        "dnsServers": {
-            "type": "array",
-            "metadata": {
-                "description": "Array of IP addresses"
-            }
-        }
-    },
-    "variables": {
-    },
-    "resources": [
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vnetObject": {
+      "type": "array",
+      "defaultValue": [
         {
-            "type": "Microsoft.Network/virtualNetworks",
-            "name": "[parameters('vnetName')]",
-            "apiVersion": "2018-12-01",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "dhcpOptions": {
-                    "dnsServers": "[parameters('dnsServers')]"
-                    
-                },
-                "addressSpace": {
-                    "addressPrefixes": [
-                        "[parameters('vnetCidr')]"
-                    ]
-                },
-                "subnets": [
-                    {
-                        "name": "[parameters('subnetName')]",
-                        "properties": {
-                            "addressPrefix": "[parameters('subnetCidr')]",
-                            "serviceEndpoints": [
-                                {
-                                    "service": "Microsoft.AzureActiveDirectory",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.AzureCosmosDB",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.ContainerRegistry",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.EventHub",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.KeyVault",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.ServiceBus",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.Sql",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.Storage",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                },
-                                {
-                                    "service": "Microsoft.Web",
-                                    "locations": [
-                                        "*"
-                                    ]
-                                }
-                            ],
-                            "delegations": [
-                            ]
-                        }
-                    }
-                ],
-                "virtualNetworkPeerings": [
-                ],
-                "enableDdosProtection": false,
-                "enableVmProtection": false
+          "vnetName": "VNET-MGMT-01",
+          "vnetCidr": "10.0.0.0/24",
+          "peeredVnetResourceId": null,
+          "subnets": [
+            {
+              "subnetName": "MGMT-01-Subnet-01",
+              "subnetCidr": "10.0.0.0/26",
+              "nsgName": "NSG-Rohopkin"
             },
-            "dependsOn": [
-            ]
+            {
+              "subnetName": "MGMT-01-Subnet-02",
+              "subnetCidr": "10.0.0.64/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "MGMT-01-Subnet-03",
+              "subnetCidr": "10.0.0.128/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "MGMT-01-Subnet-04",
+              "subnetCidr": "10.0.0.192/26",
+              "nsgName": "NSG-Rohopkin"
+            }
+          ]
+        },
+        {
+          "vnetName": "VNET-DMZ-01",
+          "vnetCidr": "10.0.16.0/20",
+          "peeredVnetResourceId": null,
+          "subnets": [
+            {
+              "subnetName": "DMZ-01-Subnet-01",
+              "subnetCidr": "10.0.16.0/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-01-Subnet-02",
+              "subnetCidr": "10.0.16.64/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-01-Subnet-03",
+              "subnetCidr": "10.0.16.128/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-01-Subnet-04",
+              "subnetCidr": "10.0.16.192/26",
+              "nsgName": "NSG-Rohopkin"
+            }
+          ]
+        },
+        {
+          "vnetName": "VNET-DMZ-02",
+          "vnetCidr": "10.0.32.0/20",
+          "peeredVnetResourceId": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/RG-Network/providers/Microsoft.Network/virtualNetworks/VNET-DMZ-01",
+          "subnets": [
+            {
+              "subnetName": "DMZ-02-Subnet-01",
+              "subnetCidr": "10.0.32.0/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-02-Subnet-02",
+              "subnetCidr": "10.0.32.64/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-02-Subnet-03",
+              "subnetCidr": "10.0.32.128/26",
+              "nsgName": "NSG-Rohopkin"
+            },
+            {
+              "subnetName": "DMZ-02-Subnet-04",
+              "subnetCidr": "10.0.32.192/26",
+              "nsgName": "NSG-Rohopkin"
+            }
+          ]
         }
+      ],
+      "metadata": {
+        "description": "JSON array containing vnet configuration"
+      }
+    },
+    "nsgName": {
+      "type": "string",
+      "defaultValue": "NSG-Rohopkin"
+    }
+  },
+  "variables": {
+    "apiVersions": {
+      "deployments": "2017-05-10",
+      "network": "2019-11-01"
+    },
+    "serviceEndpointLocations": [
+      "*"
     ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[parameters('nsgName')]",
+      "apiVersion": "[variables('apiVersions').network]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('vnetObject')[copyIndex()].vnetName]",
+      "apiVersion": "[variables('apiVersions').network]",
+      "location": "[resourceGroup().location]",
+      "copy": {
+        "name": "vnetLoop",
+        "count": "[length(parameters('vnetObject'))]"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetObject')[copyIndex()].vnetCidr]"
+          ]
+        },
+        "copy": [
+          {
+            "name": "subnets",
+            "count": "[length(parameters('vnetObject')[copyIndex()].subnets)]",
+            "input": {
+              "name": "[parameters('vnetObject')[copyIndex()].subnets[copyindex('subnets')].subnetName]",
+              "properties": {
+                "addressPrefix": "[parameters('vnetObject')[copyIndex()].subnets[copyindex('subnets')].subnetCidr]",
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+                },
+                "serviceEndpoints": [
+                  {
+                    "service": "Microsoft.AzureActiveDirectory",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.AzureCosmosDB",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.ContainerRegistry",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.EventHub",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.KeyVault",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.ServiceBus",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.Sql",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.Storage",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  },
+                  {
+                    "service": "Microsoft.Web",
+                    "locations": "[variables('serviceEndpointLocations')]"
+                  }
+                ]
+              }
+            }
+          }
+        ],
+        "enableDdosProtection": false,
+        "enableVmProtection": false
+      },
+      "dependsOn": [
+      ]
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+      "name": "[concat(parameters('vnetObject')[copyIndex()].vnetName, '/virtualNetworkPeerings')]",
+      "condition": "[not(equals(parameters('vnetObject')[copyIndex()].peeredVnetResourceId, json('null')))]",
+      "copy": {
+        "name": "peeringLoop",
+        "count": "[length(parameters('vnetObject'))]"
+      },
+      "apiVersion": "[variables('apiVersions').network]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('vnetObject')[copyIndex()].vnetName)]"
+      ],
+      "properties": {
+        "allowVirtualNetworkAccess": true,
+        "allowForwardedTraffic": false,
+        "allowGatewayTransit": false,
+        "useRemoteGateways": false,
+        "remoteVirtualNetwork": {
+          "id": "[parameters('vnetObject')[copyIndex()].peeredVnetResourceId]"
+        }
+      }
+    },
+    {
+      "name": "[concat('nestedTemplate-', copyIndex())]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "[variables('apiVersions').deployments]",
+      "condition": "[not(equals(parameters('vnetObject')[copyIndex()].peeredVnetResourceId, json('null')))]",
+      "copy": {
+        "name": "nestedDeployLoop",
+        "count": "[length(parameters('vnetObject'))]"
+      },
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+          },
+          "variables": {
+          },
+          "resources": [
+            {
+              "apiVersion": "[variables('apiVersions').network]",
+              "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+              "name": "[concat(split(parameters('vnetObject')[copyIndex()].peeredVnetResourceId, '/')[8], '/virtualNetworkPeerings')]",
+              "location": "[resourceGroup().location]",
+              "properties": {
+                "allowVirtualNetworkAccess": true,
+                "allowForwardedTraffic": false,
+                "allowGatewayTransit": false,
+                "useRemoteGateways": false,
+                "remoteVirtualNetwork": {
+                  "id": "[resourceId('Microsoft.Network/virtualNetworks',  parameters('vnetObject')[copyIndex()].vnetName)]"
+                }
+              }
+            }
+          ]
+        },
+        "parameters": {
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks/virtualNetworkPeerings', parameters('vnetObject')[copyIndex()].vnetName, 'virtualNetworkPeerings')]"
+      ]
+    }
+  ],
+  "outputs": {
+  }
 }

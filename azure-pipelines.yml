@@ -1,20 +1,89 @@
 # Hoppy7/ArmTemplates
-resources:
-- repo: self
-trigger:
-- master
-pool:
-  vmImage: 'vs2017-win2016'
-steps:
-- task: CopyFiles@2
-  displayName: 'Copy Files to the Artifact Staging Directory'
-  inputs:
-    sourceFolder: '$(build.sourcesdirectory)'
-    targetFolder: '$(build.artifactstagingdirectory)'
-    contents: '**' 
-    cleanTargetFolder: true
-- task: PublishPipelineArtifact@0
-  displayName: 'Publish Pipeline Artifact'
-  inputs:
-    targetPath: '$(build.artifactstagingdirectory)'
-    artifactName: 'ArmTemplates'
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+  # batch: false
+  # branches: 
+  #   include:
+  #     - master
+  # paths:
+  #   include:
+  #     - "*"
+
+variables:
+  agentImage: windows-2019
+  azureSubscription: RossHopkinsIC
+  resourceGroupName: RG-Sandbox-CI
+  resourceGroupLocation: WestUS2
+  paramFileSuffix: parameters.dev.json
+
+stages:
+- stage: CI_Build
+  jobs:
+  - job: Build
+    workspace:
+      clean: all
+    pool:
+      vmImage: $(agentImage)
+    steps:
+    - task: AzurePowerShell@4
+      displayName: ARM Template Build Validation Tests
+      condition: succeeded()
+      inputs:
+        azureSubscription: $(azureSubscription)
+        scriptType: inlineScript
+        inline: |
+          if (-not (Get-Module -Name Pester -ListAvailable)) {
+              Install-Module -Name Pester -Scope CurrentUser -Force;
+          }
+
+          Import-Module Pester -Force;
+          $splat = @{
+              Script = @{
+                  Path       = "$(Build.SourcesDirectory)\Scripts\Invoke-ArmTemplateCiBuild.ps1"; 
+                  Parameters = @{ 
+                      resourceGroupName = "$(resourceGroupName)";
+                      location          = "$(resourceGroupLocation)";
+                      path              = "$(Build.SourcesDirectory)";
+                      paramFileSuffix   = "$(paramFileSuffix)";
+                  }
+              }
+              OutputFile   = "$(Build.SourcesDirectory)\ArmTemplateCiBuild.Results.xml";
+              OutputFormat = "NUnitXML";
+              PassThru     = $true;
+              Strict       = $true;
+          }
+
+          $pester = Invoke-Pester @splat;
+
+          if ($pester.TotalCount -eq $pester.PassedCount)
+          {
+              Write-Host "##vso[task.complete result=Succeeded;]DONE";
+          }
+          else
+          {
+              Write-Host "##vso[task.complete result=Failed;]DONE";
+          }
+        errorActionPreference: stop
+        azurePowerShellVersion: latestVersion
+
+    - task: CopyFiles@2
+      condition: succeeded()
+      displayName: Copy Files to ArtifactStagingDirectory
+      inputs:
+        sourceFolder: $(Build.SourcesDirectory)
+        contents: |
+          *.json
+        targetFolder: $(Build.ArtifactStagingDirectory)
+
+    - task: PublishBuildArtifacts@1
+      condition: succeeded()
+      displayName: 'Publish Artifact'
+
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      condition: always()
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: "*.results.xml"
+        searchFolder: $(Build.SourcesDirectory)

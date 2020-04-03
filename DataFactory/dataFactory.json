@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataFactoryName": {
+            "type": "string",
+            "defaultValue": "rohopkin"
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "dataFactory": "2018-06-01"
+        },
+        "prefixes": {
+            "dataFactory": "df-"
+        }
+    },
+    "resources": [
+        {
+            "name": "[concat(variables('prefixes').dataFactory, parameters('dataFactoryName'))]",
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "[variables('apiVersions').dataFactory]",
+            "location": "[resourceGroup().location]",
+            "tags": {
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "resources": [
+            ]
+        }
+    ]
+}

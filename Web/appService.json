@@ -2,43 +2,60 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "appServiceName": {
-            "defaultValue": "foobar01",
-            "type": "String"
+        "appName": {
+            "type": "string",
+            "defaultValue": "rohopkinapi",
+            "maxLength": 21,
+            "metadata": {
+                "description": "The name of the function app"
+            }
         },
-        "location": {
-            "defaultValue": "westus"
+        "aspObject": {
+            "defaultValue": {
+                "name": "S1",
+                "tier": "Standard",
+                "capacity": 0
+            },
+            "type": "object"
+        },
+        "slotNames": {
+            "type": "array",
+            "defaultValue": [
+                "dev",
+                "stage"
+            ],
+            "metadata": {
+                "description": "The function app's deployment slots represented as a string array"
+            }
         }
     },
     "variables": {
-        "aspName": "[concat('ASP-', parameters('appServiceName'))]"
+        "apiVersions": {
+            "insights": "2015-05-01",
+            "web": "2019-08-01"
+        },
+        "prefixes": {
+            "appServicePlan": "asp-",
+            "insights": "apn-"
+        },
+        "dnsSuffix": ".azurewebsites.net"
     },
     "resources": [
         {
-            "type": "microsoft.insights/components",
-            "apiVersion": "2015-05-01",
-            "name": "[variables('aspName')]",
-            "location": "[parameters('location')]",
-            "kind": "web",
-            "properties": {
-                "Application_Type": "web"
-            }
-        },
-        {
             "type": "Microsoft.Web/serverfarms",
-            "apiVersion": "2016-09-01",
-            "name": "[parameters('appServiceName')]",
-            "location": "[parameters('location')]",
+            "name": "[concat(variables('prefixes').appServicePlan, parameters('appName'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
             "sku": {
-                "name": "D1",
-                "tier": "Shared",
-                "size": "D1",
-                "family": "D",
-                "capacity": 0
+                "name": "[parameters('aspObject').name]",
+                "tier": "[parameters('aspObject').tier]",
+                "size": "[parameters('aspObject').name]",
+                "family": "[substring(parameters('aspObject').name, 0, 1)]",
+                "capacity": "[parameters('aspObject').capacity]"
             },
             "kind": "app",
             "properties": {
-                "name": "[parameters('appServiceName')]",
+                "name": "[concat(variables('prefixes').appServicePlan, parameters('appName'))]",
                 "perSiteScaling": false,
                 "reserved": false,
                 "targetWorkerCount": 0,
@@ -47,140 +64,103 @@
         },
         {
             "type": "Microsoft.Web/sites",
-            "apiVersion": "2016-08-01",
-            "name": "[parameters('appServiceName')]",
-            "location": "[parameters('location')]",
+            "name": "[parameters('appName')]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/serverfarms', parameters('appServiceName'))]"
+                "[concat(variables('prefixes').appServicePlan, parameters('appName'))]"
             ],
             "kind": "app",
             "properties": {
                 "enabled": true,
                 "hostNameSslStates": [
                     {
-                        "name": "[concat(parameters('appServiceName'), '.azurewebsites.net')]",
+                        "name": "[concat(parameters('appName'), variables('dnsSuffix'))]",
                         "sslState": "Disabled",
                         "hostType": "Standard"
                     },
                     {
-                        "name": "[concat(parameters('appServiceName'), '.scm.azurewebsites.net')]",
+                        "name": "[concat(parameters('appName'), '.scm', variables('dnsSuffix'))]",
                         "sslState": "Disabled",
                         "hostType": "Repository"
                     }
                 ],
-                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServiceName'))]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
                 "reserved": false,
                 "scmSiteAlsoStopped": false,
                 "clientAffinityEnabled": true,
                 "clientCertEnabled": false,
                 "hostNamesDisabled": false,
-                "containerSize": 0,
+                "containerSize": 1536,
                 "dailyMemoryTimeQuota": 0,
                 "httpsOnly": false
             }
         },
         {
-            "type": "Microsoft.Web/sites/config",
-            "apiVersion": "2016-08-01",
-            "name": "[concat(parameters('appServiceName'), '/web')]",
-            "location": "[parameters('location')]",
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "name": "[concat(parameters('appName'), '/', parameters('appName'), variables('dnsSuffix'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
             ],
             "properties": {
-                "numberOfWorkers": 1,
-                "defaultDocuments": [
-                    "Default.htm",
-                    "Default.html",
-                    "Default.asp",
-                    "index.htm",
-                    "index.html",
-                    "iisstart.htm",
-                    "default.aspx",
-                    "index.php",
-                    "hostingstart.html"
-                ],
-                "netFrameworkVersion": "v4.0",
-                "phpVersion": "5.6",
-                "pythonVersion": "",
-                "nodeVersion": "",
-                "linuxFxVersion": "",
-                "requestTracingEnabled": false,
-                "remoteDebuggingEnabled": false,
-                "httpLoggingEnabled": false,
-                "logsDirectorySizeLimit": 35,
-                "detailedErrorLoggingEnabled": false,
-                "publishingUsername": "[concat('$', parameters('appServiceName'))]",
-                "scmType": "None",
-                "use32BitWorkerProcess": true,
-                "webSocketsEnabled": false,
-                "alwaysOn": false,
-                "appCommandLine": "",
-                "managedPipelineMode": "Integrated",
-                "virtualApplications": [
-                    {
-                        "virtualPath": "/",
-                        "physicalPath": "site\\wwwroot",
-                        "preloadEnabled": false,
-                        "virtualDirectories": null
-                    }
-                ],
-                "winAuthAdminState": 0,
-                "winAuthTenantState": 0,
-                "customAppPoolIdentityAdminState": false,
-                "customAppPoolIdentityTenantState": false,
-                "loadBalancing": "LeastRequests",
-                "routingRules": [],
-                "experiments": {
-                    "rampUpRules": []
-                },
-                "autoHealEnabled": false,
-                "vnetName": "",
-                "siteAuthEnabled": false,
-                "siteAuthSettings": {
-                    "enabled": null,
-                    "unauthenticatedClientAction": null,
-                    "tokenStoreEnabled": null,
-                    "allowedExternalRedirectUrls": null,
-                    "defaultProvider": null,
-                    "clientId": null,
-                    "clientSecret": null,
-                    "clientSecretCertificateThumbprint": null,
-                    "issuer": null,
-                    "allowedAudiences": null,
-                    "additionalLoginParams": null,
-                    "isAadAutoProvisioned": false,
-                    "googleClientId": null,
-                    "googleClientSecret": null,
-                    "googleOAuthScopes": null,
-                    "facebookAppId": null,
-                    "facebookAppSecret": null,
-                    "facebookOAuthScopes": null,
-                    "twitterConsumerKey": null,
-                    "twitterConsumerSecret": null,
-                    "microsoftAccountClientId": null,
-                    "microsoftAccountClientSecret": null,
-                    "microsoftAccountOAuthScopes": null
-                },
-                "localMySqlEnabled": false,
-                "http20Enabled": false,
-                "minTlsVersion": "1.2",
-                "ftpsState": "AllAllowed",
-                "reservedInstanceCount": 0,
-                "fileChangeAuditEnabled": false,
-                "functionsRuntimeScaleMonitoringEnabled": false
+                "siteName": "[parameters('appName')]",
+                "hostNameType": "Verified"
             }
         },
         {
-            "type": "Microsoft.Web/sites/hostNameBindings",
-            "apiVersion": "2016-08-01",
-            "name": "[concat(parameters('appServiceName'), '/', parameters('appServiceName'), '.azurewebsites.net')]",
-            "location": "[parameters('location')]",
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()])]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "slotLoop",
+                "count": "[length(parameters('slotNames'))]"
+            },
             "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]"
+                "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+            ],
+            "kind": "app",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('appName'), '-', parameters('slotNames')[copyIndex()], variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('appName'), '-', parameters('slotNames')[copyIndex()], '.scm', variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 1536,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/hostNameBindings",
+            "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()], '/', parameters('appName'), '-', parameters('slotNames')[copyIndex()], variables('dnsSuffix'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "slotBindingsLoop",
+                "count": "[length(parameters('slotNames'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('appName'), parameters('slotNames')[copyIndex()])]"
             ],
             "properties": {
-                "siteName": "[parameters('appServiceName')]",
+                "siteName": "[concat(parameters('appName'), '(', parameters('slotNames')[copyIndex()], ')')]",
                 "hostNameType": "Verified"
             }
         }
