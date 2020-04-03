@@ -12,7 +12,7 @@ trigger:
 
 variables:
   agentImage: windows-2019
-  azureSubscription: RossHopkinsIC
+  azureSubscription: RHIC
   resourceGroupName: RG-Sandbox-CI
   resourceGroupLocation: WestUS2
   paramFileSuffix: parameters.dev.json
