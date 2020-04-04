@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: |
+- powershell: |
     $directory = Get-ChildItem -Path $(build.sourcesdirectory) -Recurse -Force;
     $uniqueDirs = $directory.directory | Select-Object -Unique;
     write-output $uniqueDirs;
