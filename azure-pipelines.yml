@@ -40,7 +40,7 @@ stages:
           Import-Module Pester -Force;
           $splat = @{
               Script = @{
-                  Path       = "$(Build.SourcesDirectory)\Invoke-ArmTemplateCiBuild.ps1"; 
+                  Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.ps1"; 
                   Parameters = @{ 
                       resourceGroupName = "$(resourceGroupName)";
                       location          = "$(resourceGroupLocation)";
