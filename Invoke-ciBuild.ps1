@@ -14,7 +14,7 @@ param
     [string]$paramFileSuffix
 )
 
-function Invoke-ArmTemplateCiBuild {
+function Invoke-ciBuild {
     [CmdletBinding()]
     param
     (
@@ -64,4 +64,4 @@ function Invoke-ArmTemplateCiBuild {
     }
 }
 
-Invoke-ArmTemplateCiBuild -resourceGroupName $resourceGroupName -location $location -path $path -paramFileSuffix $paramFileSuffix;
+Invoke-ciBuild -resourceGroupName $resourceGroupName -location $location -path $path -paramFileSuffix $paramFileSuffix;
