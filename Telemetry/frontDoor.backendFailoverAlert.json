@@ -1,0 +1,181 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "failoverSites": {
+            "type": "array",
+            "defaultValue": [
+                "rohopkin-eastus.azurewebsites.net", 
+                "foobarapi.azurewebsites.net"
+            ]
+        },
+        "alertName": {
+            "defaultValue": "Frontdoor backend failover!",
+            "type": "String"
+        },
+        "logAnalyticsResourceId": {
+            "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/rg-telemetry/providers/microsoft.operationalinsights/workspaces/log-rohopkin",
+            "type": "String"
+        },
+        "alertEnabled": {
+            "type": "bool",
+            "defaultValue": true,
+            "metadata": {
+                "description": "Boolean value to set the alert's state"
+            }
+        },
+        "alertSeverity": {
+            "type": "int",
+            "defaultValue": 1,
+            "allowedValues": [
+                1,
+                2,
+                3,
+                4
+            ],
+            "metadata": {
+                "description": "The severity of the alert to fire"
+            }
+        },
+        "actionGroupEmailSmsPushVoice": {
+            "type": "array",
+            "defaultValue": [
+                {
+                    "actionName": "Rohopkin",
+                    "email": {
+                        "emailAddress": "rohopkin@microsoft.com"
+                    },
+                    "sms": {
+                        "countryCode": "1",
+                        "phoneNumber": "2065551234"
+                    },
+                    "appPush": {
+                        "emailAddress": "rohopkin@microsoft.com"
+                    },
+                    "voice": {
+                        "countryCode": "1",
+                        "phoneNumber": "2065551234"
+                    }
+                },
+                {
+                    "actionName": "Ross Hopkins",
+                    "email": {
+                        "emailAddress": "ross.hopkins@microsoft.com"
+                    },
+                    "sms": {
+                        "countryCode": "1",
+                        "phoneNumber": "2065557890"
+                    },
+                    "appPush": {
+                        "emailAddress": "ross.hopkins@microsoft.com"
+                    },
+                    "voice": {
+                        "countryCode": "1",
+                        "phoneNumber": "2065557890"
+                    }
+                }
+            ],
+            "metadata": {
+                "description": "JSON array of objects containing properties for email/sms/appPush/voice notification"
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "actionGroups": "2019-03-01",
+            "scheduledqueryrules": "2018-04-16"
+        },
+        "actionGroupShortName": "FrontDoor",
+        "alertDescription": "Frontdoor backend pool failover!",
+        "query": "[concat('let failoverSite = dynamic(', string(parameters('failoverSites')), '); let timeSpan = ago(5m); AzureDiagnostics | where TimeGenerated > timeSpan | where ResourceProvider == \"MICROSOFT.NETWORK\" and Category == \"FrontdoorAccessLog\" | extend backendHostname = replace(\":443\", @\"\", backendHostname_s) | where backendHostname in (failoverSite) | summarize requestCount = count() by backendHostname')]",
+        "useCommonAlertSchema": false
+    },
+    "resources": [
+        {
+            "type": "microsoft.insights/actionGroups",
+            "name": "[parameters('alertName')]",
+            "apiVersion": "[variables('apiVersions').actionGroups]",
+            "location": "Global",
+            "properties": {
+                "groupShortName": "[variables('actionGroupShortName')]",
+                "enabled": "[parameters('alertEnabled')]",
+                "copy": [
+                    {
+                        "name": "emailReceivers",
+                        "count": "[length(parameters('actionGroupEmailSmsPushVoice'))]",
+                        "input": {
+                            "name": "[concat(parameters('actionGroupEmailSmsPushVoice')[copyIndex('emailReceivers')].actionName, '_-EmailAction-')]",
+                            "emailAddress": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('emailReceivers')].email.emailAddress]",
+                            "useCommonAlertSchema": "[variables('useCommonAlertSchema')]"
+                        }
+                    },
+                    {
+                        "name": "smsReceivers",
+                        "count": "[length(parameters('actionGroupEmailSmsPushVoice'))]",
+                        "input": {
+                            "name": "[concat(parameters('actionGroupEmailSmsPushVoice')[copyIndex('smsReceivers')].actionName, '_-SMSAction-')]",
+                            "countryCode": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('smsReceivers')].sms.countryCode]",
+                            "phoneNumber": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('smsReceivers')].sms.phoneNumber]"
+                        }
+                    },
+                    {
+                        "name": "azureAppPushReceivers",
+                        "count": "[length(parameters('actionGroupEmailSmsPushVoice'))]",
+                        "input": {
+                            "name": "[concat(parameters('actionGroupEmailSmsPushVoice')[copyIndex('azureAppPushReceivers')].actionName, '_-AzureAppAction-')]",
+                            "emailAddress": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('azureAppPushReceivers')].appPush.emailAddress]"
+                        }
+                    },
+                    {
+                        "name": "voiceReceivers",
+                        "count": "[length(parameters('actionGroupEmailSmsPushVoice'))]",
+                        "input": {
+                            "name": "[concat(parameters('actionGroupEmailSmsPushVoice')[copyIndex('voiceReceivers')].actionName, '_-VoiceAction-')]",
+                            "countryCode": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('voiceReceivers')].voice.countryCode]",
+                            "phoneNumber": "[parameters('actionGroupEmailSmsPushVoice')[copyIndex('voiceReceivers')].voice.phoneNumber]"
+                        }
+                    }
+                ],
+                "webhookReceivers": [],
+                "itsmReceivers": [],
+                "automationRunbookReceivers": [],
+                "logicAppReceivers": [],
+                "azureFunctionReceivers": [],
+                "armRoleReceivers": []
+            }
+        },
+        {
+            "type": "microsoft.insights/scheduledqueryrules",
+            "apiVersion": "[variables('apiVersions').scheduledqueryrules]",
+            "name": "[parameters('alertName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "description": "[variables('alertDescription')]",
+                "enabled": "[string(parameters('alertEnabled'))]",
+                "source": {
+                    "query": "[variables('query')]",
+                    "authorizedResources": [],
+                    "dataSourceId": "[parameters('logAnalyticsResourceId')]",
+                    "queryType": "ResultCount"
+                },
+                "schedule": {
+                    "frequencyInMinutes": 5,
+                    "timeWindowInMinutes": 5
+                },
+                "action": {
+                    "severity": "[parameters('alertSeverity')]",
+                    "aznsAction": {
+                        "actionGroup": [
+                            "[resourceId('microsoft.insights/actionGroups', parameters('alertName'))]"
+                        ]
+                    },
+                    "trigger": {
+                        "thresholdOperator": "GreaterThanOrEqual",
+                        "threshold": 1
+                    },
+                    "odata.type": "Microsoft.WindowsAzure.Management.Monitoring.Alerts.Models.Microsoft.AppInsights.Nexus.DataContracts.Resources.ScheduledQueryRules.AlertingAction"
+                }
+            }
+        }
+    ]
+}
