@@ -1,0 +1,105 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "imageName": {
+            "type": "string",
+            "defaultValue": "windowsServer2019"
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_DS4_v2"
+        },
+        "osDiskSizeGB": {
+            "type": "int",
+            "defaultValue": 128
+        },
+        "imageObject": {
+            "type": "object",
+            "defaultValue": {
+                "imageSku": "2019-Datacenter",
+                "imagePublisher": "MicrosoftWindowsServer",
+                "imageOffer": "WindowsServer-Core",
+                "imageVersion": "Latest"
+            }
+        },
+        "vnetResourceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/RG-Network/providers/Microsoft.Network/virtualNetworks/VNET-MGMT-01"
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "MGMT-01-Subnet-01"
+        },
+        "sigResourceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/RG-Images/providers/Microsoft.Compute/galleries/sigrohopkin"
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "imageTemplates": "2019-05-01-preview"
+        },
+        "buildTimeoutInMinutes": 240
+    },
+    "resources": [
+        {
+            "type": "Microsoft.VirtualMachineImages/imageTemplates",
+            "name": "[parameters('imageName')]",
+            "apiVersion": "[variables('apiVersions').imageTemplates]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [],
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "<imgBuilderId>": {}
+
+                }
+            },
+            "properties": {
+                "buildTimeoutInMinutes": "[variables('buildTimeoutInMinutes')]",
+                "vmProfile": {
+                    "vmSize": "[parameters('vmSize')]",
+                    "osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+                    "vnetConfig": {
+                        "name": "[split(parameters('vnetResourceId'), '/')[8]]",
+                        "subnetName": "[parameters('subnetName')]",
+                        "resourceGroupName": "[split(parameters('vnetResourceId'), '/')[4]]"
+                    }
+                },
+                "source": {
+                    "type": "PlatformImage",
+                    "publisher": "[parameters('imageObject').imagePublisher]",
+                    "offer": "[parameters('imageObject').imageOffer]",
+                    "sku": "[parameters('imageObject').imageSku]",
+                    "version": "[parameters('imageObject').imageVersion]"
+                },
+                "customize": [
+                    {
+                        "type": "PowerShell",
+                        "name": "IIS",
+                        "inline": [
+                            "Install-WindowsFeature -name Web-Server -IncludeManagementTools;"
+                        ],
+                        "validExitCodes": [
+                            0
+                        ],
+                        "runElevated": true
+                    }
+                ],
+                "distribute": [
+                    {
+                        "type": "sharedImage",
+                        "galleryImageId": "[concat(parameters('sigResourceId'), '/images/', parameters('imageName'))]",
+                        "runOutputName": "[parameters('imageName')]",
+                        "aritfactTags": {
+                            "source": "azVmImageBuilder",
+                            "type": "sigonly"
+                        },
+                        "replicationRegions": []
+                    }
+                ]
+            }
+        }
+    ]
+}
