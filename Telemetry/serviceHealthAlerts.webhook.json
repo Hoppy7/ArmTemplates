@@ -1,0 +1,146 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "alertName": {
+      "type": "string",
+      "defaultValue": "ServiceHealthAlert",
+      "metadata": {
+        "description": "The name of the actionGroup and activityLogAlert"
+      }
+    },
+    "regions": {
+      "type": "array",
+      "defaultValue": [
+        "East US 2"
+      ],
+      "metadata": {
+        "description": "The regions to enable service health alerts"
+      }
+    },
+    "alertEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Boolean value to set the alert's state"
+      }
+    },
+    "useCommonAlertSchema": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Boolean value to set the action group to use a common alert schema."
+      }
+    },
+    "webhookName": {
+      "type": "string",
+      "defaultValue": "Slack Webhook",
+      "metadata": {
+        "description": "The name of the webhook in the action group"
+      }
+    },
+    "webhookUri": {
+      "type": "string",
+      "defaultValue": "https://hooks.slack.com/services/foo/bar/baz",
+      "metadata": {
+        "description": "URI to send the webhook"
+      }
+    }
+  },
+  "variables": {
+    "apiVersions": {
+      "actionGroups": "2019-03-01",
+      "activityLogAlerts": "2017-04-01"
+    },
+    "actionGroupShortName": "svcHealth"
+  },
+  "resources": [
+    {
+      "type": "microsoft.insights/actionGroups",
+      "name": "[parameters('alertName')]",
+      "apiVersion": "[variables('apiVersions').actionGroups]",
+      "location": "Global",
+      "properties": {
+        "groupShortName": "[variables('actionGroupShortName')]",
+        "enabled": "[parameters('alertEnabled')]",
+        "webhookReceivers": [
+          {
+            "name": "[parameters('webhookName')]",
+            "serviceUri": "[parameters('webhookUri')]",
+            "useCommonAlertSchema": "[parameters('useCommonAlertSchema')]",
+            "useAadAuth": false
+          }
+        ],
+        "itsmReceivers": [],
+        "automationRunbookReceivers": [],
+        "logicAppReceivers": [],
+        "azureFunctionReceivers": [],
+        "armRoleReceivers": []
+      }
+    },
+    {
+      "type": "Microsoft.Insights/activityLogAlerts",
+      "name": "[parameters('alertName')]",
+      "apiVersion": "[variables('apiVersions').activityLogAlerts]",
+      "location": "Global",
+      "dependsOn": [
+        "[resourceId('microsoft.insights/actionGroups', parameters('alertName'))]"
+      ],
+      "properties": {
+        "enabled": "[parameters('alertEnabled')]",
+        "description": "Service Health Alerts",
+        "scopes": [
+          "[subscription().id]"
+        ],
+        "condition": {
+          "allOf": [
+            {
+              "field": "category",
+              "equals": "ServiceHealth",
+              "containsAny": null
+            },
+            {
+              "field": "properties.incidentType",
+              "equals": "Informational",
+              "containsAny": null
+            },
+            {
+              "field": "properties.incidentType",
+              "equals": "Maintenance",
+              "containsAny": null
+            },
+            {
+              "field": "properties.incidentType",
+              "equals": "Incident",
+              "containsAny": null
+            },
+            {
+              "field": "properties.incidentType",
+              "equals": "ActionRequired",
+              "containsAny": null
+            },
+            {
+              "field": "properties.incidentType",
+              "equals": "Security",
+              "containsAny": null
+            },
+            {
+              "field": "properties.impactedServices[*].ImpactedRegions[*].RegionName",
+              "equals": null,
+              "containsAny": "[parameters('regions')]"
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+            {
+              "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('alertName'))]",
+              "webhookProperties": {
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
