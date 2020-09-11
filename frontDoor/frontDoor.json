@@ -1,0 +1,184 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "type": "String",
+            "defaultValue": "rohopkin",
+            "metadata": {
+                "description": "The name of the Front Door instance"
+            }
+        },
+        "configurationArray": {
+            "type": "array",
+            "defaultValue": [
+                {
+                    "configName": "rohopkinConfig",
+                    "frontendHost": {
+                        "hostName": "rohopkin.azurefd.net",
+                        "sessionAffinityEnabledState": "Disabled",
+                        "sessionAffinityTtlSeconds": 0,
+                        "resourceState": "Enabled"
+                    },
+                    "backendPool": {
+                        "backendPoolName": "rohopkin",
+                        "backends": [
+                            {
+                                "address": "rohopkin-eastus.azurewebsites.net",
+                                "httpPort": 80,
+                                "httpsPort": 443,
+                                "priority": 2,
+                                "weight": 1,
+                                "backendHostHeader": "rohopkin-eastus.azurewebsites.net",
+                                "enabledState": "Enabled"
+                            },
+                            {
+                                "address": "rohopkin-westus.azurewebsites.net",
+                                "httpPort": 80,
+                                "httpsPort": 443,
+                                "priority": 1,
+                                "weight": 100,
+                                "backendHostHeader": "rohopkin-westus.azurewebsites.net",
+                                "enabledState": "Enabled"
+                            }
+                        ],
+                        "healthProbe": {
+                            "intervalInSeconds": 5,
+                            "path": "/",
+                            "protocol": "Https",
+                            "resourceState": "Enabled",
+                            "enabledState": "Enabled",
+                            "healthProbeMethod": "Head"
+                        },
+                        "loadBalancing": {
+                            "additionalLatencyMilliseconds": 0,
+                            "sampleSize": 1,
+                            "successfulSamplesRequired": 1,
+                            "resourceState": "Enabled"
+                        }
+                    },
+                    "routingRule": {
+                        "protocols": [
+                            "Http",
+                            "Https"
+                        ],
+                        "patterns": [
+                            "/*"
+                        ],
+                        "forwardingProtocol": "MatchRequest",
+                        "backendPoolName": "rohopkin"
+                    }
+                }
+            ],
+            "metadata": {
+                "description": "JSON array containing the configuration for the Front Door. frontendHosts, backendPools, loadBalancingSettings, healthProbe, routingRules"
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "frontdoors": "2020-05-01"
+        },
+        "suffixes": {
+            "backendPool": "-backend",
+            "frontend": "-frontend",
+            "healthProbe": "-healthProbe",
+            "loadBalancing": "-lbSettings",
+            "routingRules": "-route"
+        },
+        "enabledState": "Enabled"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/frontdoors",
+            "apiVersion": "[variables('apiVersions').frontdoors]",
+            "name": "[parameters('frontDoorName')]",
+            "location": "Global",
+            "properties": {
+                "resourceState": "[variables('enabledState')]",
+                "copy": [
+                    {
+                        "name": "backendPools",
+                        "count": "[length(parameters('configurationArray'))]",
+                        "input": {
+                            "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), concat('/BackendPools/', parameters('configurationArray')[copyIndex('backendPools')].configName, variables('suffixes').backendPool))]",
+                            "name": "[concat(parameters('frontDoorName'), variables('suffixes').backendPool)]",
+                            "properties": {
+                                "backends": "[parameters('configurationArray')[copyIndex('backendPools')].backendPool.backends]",
+                                "healthProbeSettings": {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/HealthProbeSettings/', parameters('configurationArray')[copyIndex('backendPools')].configName, variables('suffixes').healthProbe)]"
+                                },
+                                "loadBalancingSettings": {
+                                    "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/loadbalancingsettings/', parameters('configurationArray')[copyIndex('backendPools')].configName, variables('suffixes').loadBalancing)]"
+                                },
+                                "resourceState": "[variables('enabledState')]"
+                            }
+                        }
+                    },
+                    {
+                        "name": "healthProbeSettings",
+                        "count": "[length(parameters('configurationArray'))]",
+                        "input": {
+                            "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/HealthProbeSettings/', parameters('configurationArray')[copyIndex('healthProbeSettings')].configName, variables('suffixes').healthProbe)]",
+                            "name": "[concat(parameters('configurationArray')[copyIndex('healthProbeSettings')].configName, variables('suffixes').healthProbe)]",
+                            "properties": "[parameters('configurationArray')[copyIndex('healthProbeSettings')].backendPool.healthProbe]"
+
+                        }
+                    },
+                    {
+                        "name": "frontendEndpoints",
+                        "count": "[length(parameters('configurationArray'))]",
+                        "input": {
+                            "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/FrontendEndpoints/', parameters('configurationArray')[copyIndex('frontendEndpoints')].configName, variables('suffixes').frontend)]",
+                            "name": "[concat(parameters('configurationArray')[copyIndex('frontendEndpoints')].configName, variables('suffixes').frontend)]",
+                            "properties": "[parameters('configurationArray')[copyIndex('frontendEndpoints')].frontendHost]"
+
+                        }
+                    },
+                    {
+                        "name": "loadBalancingSettings",
+                        "count": "[length(parameters('configurationArray'))]",
+                        "input": {
+                            "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/LoadBalancingSettings/', parameters('configurationArray')[copyIndex('loadBalancingSettings')].configName, variables('suffixes').loadBalancing)]",
+                            "name": "[concat(parameters('configurationArray')[copyIndex('loadBalancingSettings')].configName, variables('suffixes').loadBalancing)]",
+                            "properties": "[parameters('configurationArray')[copyIndex('loadBalancingSettings')].backendPool.loadBalancing]"
+
+                        }
+                    },
+                    {
+                        "name": "routingRules",
+                        "count": "[length(parameters('configurationArray'))]",
+                        "input": {
+                            "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), concat('/RoutingRules/', parameters('configurationArray')[copyIndex('routingRules')].configName, variables('suffixes').routingRules))]",
+                            "name": "[concat(parameters('configurationArray')[copyIndex('routingRules')].configName, variables('suffixes').routingRules)]",
+                            "properties": {
+                                "frontendEndpoints": [
+                                    {
+                                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), '/frontendendpoints/', parameters('configurationArray')[copyIndex('routingRules')].configName, variables('suffixes').frontend)]"
+                                    }
+                                ],
+                                "acceptedProtocols": "[parameters('configurationArray')[copyIndex('routingRules')].routingRule.protocols]",
+                                "patternsToMatch": "[parameters('configurationArray')[copyIndex('routingRules')].routingRule.patterns]",
+                                "enabledState": "[variables('enabledState')]",
+                                "resourceState": "[variables('enabledState')]",
+                                "routeConfiguration": {
+                                    "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
+                                    "forwardingProtocol": "[parameters('configurationArray')[copyIndex('routingRules')].routingRule.forwardingProtocol]",
+                                    "backendPool": {
+                                        "id": "[concat(resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName')), concat('/backendpools/', parameters('configurationArray')[copyIndex('routingRules')].routingRule.backendPoolName, variables('suffixes').backendPool))]"
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                ],
+                "backendPoolsSettings": {
+                    "enforceCertificateNameCheck": "Enabled",
+                    "sendRecvTimeoutSeconds": 30
+                },
+                "enabledState": "[variables('enabledState')]"
+            }
+        }
+    ]
+}
