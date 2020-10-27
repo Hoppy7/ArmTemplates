@@ -10,7 +10,7 @@ Build virtual machine images and distibute them via Shared Image Gallery (SIG)
 
 <br>
 
-### vm.Base.json
+### vm.base.json
 
 Standardized base layer VM ARM template
 

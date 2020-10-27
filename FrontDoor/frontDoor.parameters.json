@@ -1,0 +1,70 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "value": "rohopkin"
+        },
+        "configurationArray": {
+            "value": [
+                {
+                    "configName": "rohopkinConfig",
+                    "frontendHost": {
+                        "hostName": "rohopkin.azurefd.net",
+                        "sessionAffinityEnabledState": "Disabled",
+                        "sessionAffinityTtlSeconds": 0,
+                        "resourceState": "Enabled"
+                    },
+                    "backendPool": {
+                        "backendPoolName": "rohopkin",
+                        "backends": [
+                            {
+                                "address": "rohopkin-eastus.azurewebsites.net",
+                                "httpPort": 80,
+                                "httpsPort": 443,
+                                "priority": 2,
+                                "weight": 1,
+                                "backendHostHeader": "rohopkin-eastus.azurewebsites.net",
+                                "enabledState": "Enabled"
+                            },
+                            {
+                                "address": "rohopkin-westus.azurewebsites.net",
+                                "httpPort": 80,
+                                "httpsPort": 443,
+                                "priority": 1,
+                                "weight": 100,
+                                "backendHostHeader": "rohopkin-westus.azurewebsites.net",
+                                "enabledState": "Enabled"
+                            }
+                        ],
+                        "healthProbe": {
+                            "intervalInSeconds": 5,
+                            "path": "/",
+                            "protocol": "Https",
+                            "resourceState": "Enabled",
+                            "enabledState": "Enabled",
+                            "healthProbeMethod": "Head"
+                        },
+                        "loadBalancing": {
+                            "additionalLatencyMilliseconds": 0,
+                            "sampleSize": 1,
+                            "successfulSamplesRequired": 1,
+                            "resourceState": "Enabled"
+                        }
+                    },
+                    "routingRule": {
+                        "protocols": [
+                            "Http",
+                            "Https"
+                        ],
+                        "patterns": [
+                            "/*"
+                        ],
+                        "forwardingProtocol": "MatchRequest",
+                        "backendPoolName": "rohopkin"
+                    }
+                }
+            ]
+        }
+    }
+}
