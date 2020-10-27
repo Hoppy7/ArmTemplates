@@ -6,15 +6,19 @@
 
 ### imageBuilder.json
 
-    Build virtual machine images and distibute them via Shared Image Gallery (SIG)
+Build virtual machine images and distibute them via Shared Image Gallery (SIG)
+
+<br>
 
 ### vm.Base.json
 
-    Standardized base layer VM ARM template
+Standardized base layer VM ARM template
+
+<br>
 
 ### vm.extensions.omsAgent.json
 
-    Deploys the omsAgent to the target VM
+Deploys the omsAgent to the target VM
 
 <br>
 
@@ -22,7 +26,7 @@
 
 ### containerRegistry.json
 
-    Deploys an Azure Container Registry instance
+Deploys an Azure Container Registry instance
 
 <br>
 
@@ -30,7 +34,7 @@
 
 ### dataFactory.json
 
-    Deploys an Azure Data Factory instance
+Deploys an Azure Data Factory instance
 
 <br>
 
@@ -38,7 +42,7 @@
 
 ### frontDoor.json
 
-    Deploys a dynamic, fully configured Front Door instance
+Deploys a dynamic, fully configured Front Door instance
 
 <br>
 
@@ -46,11 +50,13 @@
 
 ### logicApp.diagnosticSetting.json
 
-    Enables the diagnostic setting on the target Logic App, configured to forward telemetry to the specified Log Analytics workspace
+Enables the diagnostic setting on the target Logic App, configured to forward telemetry to the specified Log Analytics workspace
+
+<br>
 
 ### logicApp.listCallBackUrl.json
 
-    Simple ARM template example to dynamically retrieve another Logic App's CallbackURL and hit it with a HTTP POST
+Simple ARM template example to dynamically retrieve another Logic App's CallbackURL and hit it with a HTTP POST
 
 <br>
 
@@ -58,11 +64,13 @@
 
 ### vnet.json
 
-    Deploys a standardized virtual network configuration
+Deploys a standardized virtual network configuration
+
+<br>
 
 ### vnet.spoke.json
 
-    Deploys a virtual network and peers it to the specified hub remote virtual network
+Deploys a virtual network and peers it to the specified hub remote virtual network
 
 <br>
 
@@ -70,7 +78,7 @@
 
 ### sql.json
 
-    Deploys a SQL server and database instances
+Deploys a SQL server and database instances
 
 <br>
 
@@ -78,23 +86,31 @@
 
 ### frontDoor.backendFailoverAlert.json
 
-    Azure Monitor alerts for when traffic hits the specified site in the FrontDoor's backend pool
+Azure Monitor alerts for when traffic hits the specified site in the FrontDoor's backend pool
+
+<br>
 
 ### resourceHealthAlerts.json
 
-    Azure Monitor Resource Health Alerts
+Azure Monitor Resource Health Alerts
+
+<br>
 
 ### serviceHealthAlerts.json
 
-    Azure Monitor Service Health Alerts
+Azure Monitor Service Health Alerts
+
+<br>
 
 ### serviceHealthAlerts.webhook.json
 
-    Azure Monitor Service Health Alerts ### webhook only
+Azure Monitor Service Health Alerts ### webhook only
+
+<br>
 
 ### telemetry.json
 
-    Deploys Azure Automation, Log Analytics, & App Insights resources
+Deploys Azure Automation, Log Analytics, & App Insights resources
 
 <br>
 
@@ -102,8 +118,10 @@
 
 ### function.json
 
-    Deploys Function App infra
+Deploys Function App infra
+
+<br>
 
 ### appService.json
 
-    Deploys App Service infra
+Deploys App Service infra
