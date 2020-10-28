@@ -34,7 +34,7 @@ stages:
         scriptType: inlineScript
         inline: |
           $directory = Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse -Force;
-          $uniqueDirs = $directory.directory | ? {$_.FullName -notmatch ".git"} | Select-Object -Unique;
+          $uniqueDirs = $directory.directory | ? {$_.FullName -notmatch ".git" -and $_.Name -ne "s"} | Select-Object -Unique;
           $uniqueDirs
     
           # $pesterVersion = "4.10.1";
