@@ -42,7 +42,7 @@ stages:
               Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.tests.ps1";
               Parameters = @{ 
                 resourceGroupName = "$(resourceGroupName)";
-                location          = "$(location)";
+                location          = "$(resourceGroupLocation)";
                 path              = "$(Build.SourcesDirectory)";
                 paramFileSuffix   = "$(paramFileSuffix)";
               }
