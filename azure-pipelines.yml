@@ -33,39 +33,35 @@ stages:
         azureSubscription: $(azureSubscription)
         scriptType: inlineScript
         inline: |
-          $directory = Get-ChildItem -Path "$(Build.SourcesDirectory)" -Recurse -Force;
-          $uniqueDirs = $directory.directory | ? {$_.FullName -notmatch ".git" -and $_.Name -ne "s"} | Select-Object -Unique;
-          $uniqueDirs
-    
-          # $pesterVersion = "4.10.1";
-          # Install-Module -Name Pester -Scope CurrentUser -RequiredVersion $pesterVersion -Force;
-          # Import-Module Pester -RequiredVersion $pesterVersion -Force;
+          $pesterVersion = "4.10.1";
+          Install-Module -Name Pester -Scope CurrentUser -RequiredVersion $pesterVersion -Force;
+          Import-Module Pester -RequiredVersion $pesterVersion -Force;
           
-          # $splat = @{
-          #   Script = @{
-          #     Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.tests.ps1";
-          #     Parameters = @{ 
-          #       resourceGroupName = "$(resourceGroupName)";
-          #       location          = "$(location)";
-          #       path              = "$(Build.SourcesDirectory)";
-          #       paramFileSuffix   = "$(paramFileSuffix)";
-          #     }
-          #   }
-          #   OutputFile   = "$(Build.SourcesDirectory)\ArmTemplateCiBuild.Results.xml";
-          #   OutputFormat = "NUnitXML";
-          #   PassThru     = $true;
-          #   Strict       = $true;
-          # }
-          # $pester = Invoke-Pester @splat;
+          $splat = @{
+            Script = @{
+              Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.tests.ps1";
+              Parameters = @{ 
+                resourceGroupName = "$(resourceGroupName)";
+                location          = "$(location)";
+                path              = "$(Build.SourcesDirectory)";
+                paramFileSuffix   = "$(paramFileSuffix)";
+              }
+            }
+            OutputFile   = "$(Build.SourcesDirectory)\ArmTemplateCiBuild.Results.xml";
+            OutputFormat = "NUnitXML";
+            PassThru     = $true;
+            Strict       = $true;
+          }
+          $pester = Invoke-Pester @splat;
           
-          # if ($pester.TotalCount -eq $pester.PassedCount)
-          # {
-          #   Write-Host "##vso[task.complete result=Succeeded;]DONE";
-          # }
-          # else
-          # {
-          #   Write-Host "##vso[task.complete result=Failed;]DONE";
-          # }
+          if ($pester.TotalCount -eq $pester.PassedCount)
+          {
+            Write-Host "##vso[task.complete result=Succeeded;]DONE";
+          }
+          else
+          {
+            Write-Host "##vso[task.complete result=Failed;]DONE";
+          }
         errorActionPreference: stop
         azurePowerShellVersion: latestVersion
 
