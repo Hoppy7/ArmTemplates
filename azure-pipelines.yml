@@ -27,25 +27,25 @@ stages:
       vmImage: $(agentImage)
     steps:
     - task: AzurePowerShell@4
-      displayName: ARM Template Build Validation Tests
+      displayName: ARM Template BVTs
       condition: succeeded()
       inputs:
         azureSubscription: $(azureSubscription)
         scriptType: inlineScript
         inline: |
-          if (-not (Get-Module -Name Pester -ListAvailable)) {
-              Install-Module -Name Pester -Scope CurrentUser -Force;
-          }
-
-          Import-Module Pester -Force;
+          $pesterVersion = "4.10.1";
+          Remove-module Pester -Force;
+          Install-Module -Name Pester -Scope CurrentUser -RequiredVersion $pesterVersion -Force;
+          Import-Module Pester -RequiredVersion $pesterVersion -Force;
+          
           $splat = @{
               Script = @{
-                  Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.ps1"; 
+                  Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.tests.ps1";
                   Parameters = @{ 
-                      resourceGroupName = "$(resourceGroupName)";
-                      location          = "$(resourceGroupLocation)";
-                      path              = "$(Build.SourcesDirectory)";
-                      paramFileSuffix   = "$(paramFileSuffix)";
+                      resourceGroupName = $resourceGroupName;
+                      location          = $location;
+                      path              = $path;
+                      paramFileSuffix   = $paramFileSuffix;
                   }
               }
               OutputFile   = "$(Build.SourcesDirectory)\ArmTemplateCiBuild.Results.xml";
@@ -53,9 +53,8 @@ stages:
               PassThru     = $true;
               Strict       = $true;
           }
-
           $pester = Invoke-Pester @splat;
-
+          
           if ($pester.TotalCount -eq $pester.PassedCount)
           {
               Write-Host "##vso[task.complete result=Succeeded;]DONE";

@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "frontDoorName": {
-            "type": "String",
+            "type": "string",
             "defaultValue": "rohopkin",
             "metadata": {
                 "description": "The name of the Front Door instance"

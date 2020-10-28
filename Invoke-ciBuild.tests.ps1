@@ -32,7 +32,7 @@ function Invoke-ciBuild {
     )
 
     $directory = Get-ChildItem -Path $path -Recurse -Force;
-    $uniqueDirs = $directory.directory | Select-Object -Unique;
+    $uniqueDirs = $directory.directory | ? {$_.FullName -notmatch ".git"} | Select-Object -Unique;
 
     describe "armTemplateValidation" {
         
@@ -40,16 +40,16 @@ function Invoke-ciBuild {
 
             $armTemplates = Get-ChildItem -Path $dir.Fullname -Filter "*.json" -Exclude "*$paramFileSuffix*" -Recurse -Depth 0 -Force;
 
-            foreach ($armT in $armTemplates) {
+            foreach ($arm in $armTemplates) {
 
-                it "$($armT.Name)" {
+                it "$($arm.Name)" {
 
                     $deploySplat = @{};
                     $deploySplat.Add("Mode", "Complete");
-                    $deploySplat.Add("TemplateFile", $armT.FullName);    
+                    $deploySplat.Add("TemplateFile", $arm.FullName);    
         
-                    $paramfileName = $armT.Name.Substring(0, $armT.Name.LastIndexOf(".")) + ".$paramFileSuffix";
-                    $paramFilePath = $armT.FullName.Replace($armT.Name, $paramfileName);
+                    $paramfileName = $arm.Name.Substring(0, $arm.Name.LastIndexOf(".")) + ".$paramFileSuffix";
+                    $paramFilePath = $arm.FullName.Replace($arm.Name, $paramfileName);
                     $paramFile = Test-Path -Path $paramFilePath;
 
                     if ($paramFile) {
