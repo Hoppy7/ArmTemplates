@@ -34,7 +34,6 @@ stages:
         scriptType: inlineScript
         inline: |
           $pesterVersion = "4.10.1";
-          Remove-module Pester -Force;
           Install-Module -Name Pester -Scope CurrentUser -RequiredVersion $pesterVersion -Force;
           Import-Module Pester -RequiredVersion $pesterVersion -Force;
           
