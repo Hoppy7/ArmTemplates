@@ -43,7 +43,7 @@ stages:
                   Parameters = @{ 
                       resourceGroupName = $resourceGroupName;
                       location          = $location;
-                      path              = $path;
+                      path              = $(Build.SourcesDirectory);
                       paramFileSuffix   = $paramFileSuffix;
                   }
               }
