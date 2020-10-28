@@ -41,10 +41,10 @@ stages:
               Script = @{
                   Path       = "$(Build.SourcesDirectory)\Invoke-ciBuild.tests.ps1";
                   Parameters = @{ 
-                      resourceGroupName = $resourceGroupName;
-                      location          = $location;
+                      resourceGroupName = $(resourceGroupName);
+                      location          = $(location);
                       path              = $(Build.SourcesDirectory);
-                      paramFileSuffix   = $paramFileSuffix;
+                      paramFileSuffix   = $(paramFileSuffix);
                   }
               }
               OutputFile   = "$(Build.SourcesDirectory)\ArmTemplateCiBuild.Results.xml";
