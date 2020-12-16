@@ -11,6 +11,12 @@ Build virtual machine images and distibute them via Shared Image Gallery (SIG)
 
 <br>
 
+### vm.availabilitySet.json
+
+Deploys VMs into an availability set with configurable upgrade and fault domains
+
+<br>
+
 ### vm.base.json
 
 Standardized base layer VM ARM template
