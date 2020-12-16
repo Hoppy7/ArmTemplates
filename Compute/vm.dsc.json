@@ -1,0 +1,329 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin username"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Admin password"
+            }
+        },
+        "imageSku": {
+            "type": "string",
+            "defaultValue": "2019-Datacenter",
+            "metadata": {
+                "description": "The image sku"
+            }
+        },
+        "imagePublisher": {
+            "type": "string",
+            "defaultValue": "MicrosoftWindowsServer",
+            "metadata": {
+                "description": "The image publisher"
+            }
+        },
+        "imageOffer": {
+            "type": "string",
+            "defaultValue": "WindowsServer",
+            "metadata": {
+                "description": "The image offer"
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "minLength": 1,
+            "defaultValue": "Standard_DS2_v2",
+            "metadata": {
+                "description": "The size of the VM"
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "The VM's name prefix"
+            }
+        },
+        "instanceCount": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The number of VMs to create"
+            }
+        },
+        "instanceIndex": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The VM's starting index.  e.g. instanceIndex = 1 - testvm01  e.g. instanceIndex = 4 - testvm04"
+            }
+        },
+        "vnetResourceGroup": {
+            "type": "string",
+            "metadata": {
+                "description": "The vnet's resource group name"
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The name of the vnet to attach the VM's Nic to'"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "metadata": {
+                "description": "The vnet's subnet name"
+            }
+        },
+        "avSetConfig": {
+            "type": "object",
+            "defaultValue": {
+                "sku": "Aligned",
+                "PlatformUpdateDomainCount": 2,
+                "PlatformFaultDomainCount": 2
+            },
+            "metadata": {
+                "description": "The availability set's configuration"
+            }
+        },
+        "dataDiskObject": {
+            "type": "array",
+            "metadata": {
+                "description": "Array of data disk objects"
+            },
+            "defaultValue": [
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                }
+            ]
+        },
+        "dscConfigObject": {
+            "type": "object",
+            "metadata": {
+                "description": "JSON object containing the DSC configuration attributes to apply to the VMs"
+            },
+            "defaultValue": {
+                "oaasResourceId": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/RG-Telemetry/providers/Microsoft.Automation/automationAccounts/oaas-rohopkin",
+                "nodeConfigurationName": "azureDevOps.pipelineAgent",
+                "dscExtensionVersion": "2.80",
+                "configurationMode": "ApplyandAutoCorrect",
+                "rebootNodeIfNeeded": true,
+                "actionAfterReboot": "ContinueConfiguration"
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "compute": "2019-07-01",
+            "network": "2020-06-01",
+            "oaas": "2018-01-15"
+        },
+        "prefixes": {
+            "avset": "avs-",
+            "dataDisk": "dataDisk-",
+            "ipConfig": "ipConfig-",
+            "loadBalancer": "lb-",
+            "nic": "nic-",
+            "osDisk": "osDisk-",
+            "pubIp": "pip-",
+            "vmName": "[concat('vm-', parameters('vmName'))]"
+        },
+        "vnetResourceId": "[resourceid(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "subnetResourceId": "[concat(variables('vnetResourceId'), '/subnets/', parameters('subnetName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "name": "[concat(variables('prefixes').pubIp, variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+            "apiVersion": "[variables('apiVersions').network]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "pubipLoop",
+                "count": "[parameters('instanceCount')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+            }
+        },
+        {
+            "type": "Microsoft.Compute/availabilitySets",
+            "name": "[concat(variables('prefixes').avset, variables('prefixes').vmName)]",
+            "apiVersion": "[variables('apiVersions').network]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('avSetConfig').sku]"
+            },
+            "properties": {
+                "PlatformUpdateDomainCount": "[parameters('avSetConfig').PlatformUpdateDomainCount]",
+                "PlatformFaultDomainCount": "[parameters('avSetConfig').PlatformFaultDomainCount]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "name": "[concat(variables('prefixes').nic, variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+            "apiVersion": "[variables('apiVersions').network]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "nicLoop",
+                "count": "[parameters('instanceCount')]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "[concat(variables('prefixes').ipConfig, variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('prefixes').pubIp, variables('prefixes').vmName, copyindex(parameters('instanceIndex'))))]"
+                            },
+                            "subnet": {
+                                "id": "[variables('subnetResourceId')]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', concat(variables('prefixes').pubIp, variables('prefixes').vmName, copyindex(parameters('instanceIndex'))))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines",
+            "name": "[concat(variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+            "apiVersion": "[variables('apiVersions').compute]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "count": "[parameters('instanceCount')]",
+                "name": "vmLoop"
+            },
+            "dependsOn": [
+                "nicLoop"
+            ],
+            "properties": {
+                "availabilitySet": {
+                    "id": "[resourceId('Microsoft.Compute/availabilitySets', concat(variables('prefixes').avset, variables('prefixes').vmName))]"
+                },
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+                    "adminUsername": "[parameters('adminUsername')]",
+                    "adminPassword": "[parameters('adminPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": {
+                        "publisher": "[parameters('imagePublisher')]",
+                        "offer": "[parameters('imageOffer')]",
+                        "sku": "[parameters('imageSku')]",
+                        "version": "latest"
+                    },
+                    "osDisk": {
+                        "name": "[concat(variables('prefixes').osDisk, variables('prefixes').vmName, copyindex(parameters('instanceIndex')))]",
+                        "caching": "ReadWrite",
+                        "createOption": "FromImage"
+                    },
+                    "copy": [
+                        {
+                            "name": "dataDisks",
+                            "count": "[length(parameters('dataDiskObject'))]",
+                            "input": {
+                                "caching": "[parameters('dataDiskObject')[copyIndex('dataDisks')].caching]",
+                                "diskSizeGB": "[parameters('dataDiskObject')[copyIndex('dataDisks')].diskSizeGB]",
+                                "lun": "[copyIndex('dataDisks')]",
+                                "name": "[concat(variables('prefixes').dataDisk, variables('prefixes').vmName, copyindex(parameters('instanceIndex')), '-', copyindex('dataDisks'))]",
+                                "createOption": "Empty"
+                            }
+                        }
+                    ]
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('prefixes').nic, variables('prefixes').vmName, copyindex(parameters('instanceIndex'))))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": false
+                    }
+                }
+            },
+            "resources": [
+            ]
+        },
+        {
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+            "name": "[concat(variables('prefixes').vmName, copyindex(parameters('instanceIndex')),'/Microsoft.Powershell.DSC')]",
+            "apiVersion": "[variables('apiVersions').compute]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "count": "[parameters('instanceCount')]",
+                "name": "dscLoop"
+            },
+            "dependsOn": [
+                "vmLoop"
+            ],
+            "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "[parameters('dscConfigObject').dscExtensionVersion]",
+                "autoUpgradeMinorVersion": true,
+                "protectedSettings": {
+                    "Items": {
+                        "registrationKeyPrivate": "[listKeys(parameters('dscConfigObject').oaasResourceId, variables('apiVersions').oaas).Keys[0].value]"
+                    }
+                },
+                "settings": {
+                    "Properties": [
+                        {
+                            "Name": "RegistrationKey",
+                            "Value": {
+                                "UserName": "PLACEHOLDER_DONOTUSE",
+                                "Password": "PrivateSettingsRef:registrationKeyPrivate"
+                            },
+                            "TypeName": "System.Management.Automation.PSCredential"
+                        },
+                        {
+                            "Name": "RegistrationUrl",
+                            "Value": "[reference(parameters('dscConfigObject').oaasResourceId, variables('apiVersions').oaas).registrationUrl]",
+                            "TypeName": "System.String"
+                        },
+                        {
+                            "Name": "NodeConfigurationName",
+                            "Value": "[parameters('dscConfigObject').nodeConfigurationName]",
+                            "TypeName": "System.String"
+                        },
+                        {
+                            "Name": "ConfigurationMode",
+                            "Value": "[parameters('dscConfigObject').configurationMode]",
+                            "TypeName": "System.String"
+                        },
+                        {
+                            "Name": "RebootNodeIfNeeded",
+                            "Value": "[parameters('dscConfigObject').rebootNodeIfNeeded]",
+                            "TypeName": "System.Boolean"
+                        },
+                        {
+                            "Name": "ActionAfterReboot",
+                            "Value": "[parameters('dscConfigObject').actionAfterReboot]",
+                            "TypeName": "System.String"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

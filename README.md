@@ -17,6 +17,12 @@ Standardized base layer VM ARM template
 
 <br>
 
+### vm.dsc.json
+
+Deploys VMs and configures them with the Azure Automation DSC extension
+
+<br>
+
 ### vm.extensions.omsAgent.json
 
 Deploys the omsAgent to the target VM
