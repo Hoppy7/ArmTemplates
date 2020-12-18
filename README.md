@@ -17,6 +17,11 @@ Deploys VMs into an availability set with configurable upgrade and fault domains
 
 <br>
 
+### vm.availabilityZone.json
+Dynamically distibutes and deploys VMs into availability zones
+
+<br>
+
 ### vm.base.json
 
 Standardized base layer VM ARM template

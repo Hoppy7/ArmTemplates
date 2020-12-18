@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "value": "localadmin"
+        },
+        "adminPassword": {
+            "value": "P@ssword123!"
+        },
+        "imageSku": {
+            "value": "2019-Datacenter"
+        },
+        "imagePublisher": {
+            "value": "MicrosoftWindowsServer"
+        },
+        "imageOffer": {
+            "value": "WindowsServer"
+        },
+        "vmSize": {
+            "value": "Standard_DS2_v2"
+        },
+        "vmName": {
+            "value": "dev0"
+        },
+        "instanceCount": {
+            "value": 5
+        },
+        "instanceIndex": {
+            "value": 1
+        },
+        "vnetResourceGroup": {
+            "value": "RG-Network"
+        },
+        "vnetName": {
+            "value": "vnet-asev3-01"
+        },
+        "subnetName": {
+            "value": "asev3-01-subnet-deploy-01"
+        },
+        "dataDiskObject": {
+            "value": [
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                },
+                {
+                    "diskSizeGB": 32,
+                    "caching": "ReadWrite"
+                }
+            ]
+        },
+        "availabilityZone": {
+            "value": "dynamic"
+        }
+    }
+}
