@@ -17,6 +17,9 @@
         "imageOffer": {
             "value": "WindowsServer"
         },
+        "imageVersion": {
+            "value": "latest"
+        },
         "vmSize": {
             "value": "Standard_DS2_v2"
         },

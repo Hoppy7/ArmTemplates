@@ -35,6 +35,13 @@
         "description": "The image offer"
       }
     },
+    "imageVersion": {
+      "type": "string",
+      "defaultValue": "latest",
+      "metadata": {
+        "description": "The version of the image sku"
+      }
+    },
     "vmSize": {
       "type": "string",
       "minLength": 1,
@@ -178,7 +185,7 @@
             "publisher": "[parameters('imagePublisher')]",
             "offer": "[parameters('imageOffer')]",
             "sku": "[parameters('imageSku')]",
-            "version": "latest"
+            "version": "[parameters('imageVersion')]"
           },
           "osDisk": {
             "name": "[concat(parameters('vmName'), copyindex(parameters('instanceIndex')), '-osDisk')]",
