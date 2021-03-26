@@ -1,0 +1,307 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "type": "string",
+            "defaultValue": "foobarapi",
+            "maxLength": 21,
+            "metadata": {
+                "description": "The name of the function app"
+            }
+        },
+        "slotNames": {
+            "type": "array",
+            "defaultValue": [
+                "dev"
+            ],
+            "metadata": {
+                "description": "The function app's deployment slots represented as a string array"
+            }
+        },
+        "aspSku": {
+            "type": "string",
+            "defaultValue": "p1v3",
+            "metadata": {
+                "description": "The sku of the app service plan"
+            }
+        },
+        "vnetResourceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/0aba2ef8-fd83-4066-abf0-8f5be9c9ad8c/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-dmz-01",
+            "metadata": {
+                "description": "Name of the VNET to add a subnet to"
+            }
+        },
+        "subnetAddressPrefix": {
+            "type": "string",
+            "defaultValue": "10.0.0.192/26",
+            "metadata": {
+                "description": "The address space for the new subnet"
+            }
+        }
+    },
+    "variables": {
+        "apiVersions": {
+            "deployments": "2017-05-10",
+            "insights": "2015-05-01",
+            "network": "2020-05-01",
+            "swift": "2018-02-01",
+            "web": "2019-08-01"
+        },
+        "prefixes": {
+            "appServicePlan": "asp-",
+            "insights": "apn-",
+            "subnet": "func-"
+        },
+        "serviceEndpointLocations": [
+            "*"
+        ],
+        "dnsSuffix": ".azurewebsites.net",
+        "vnetResourceGroup": "[split(parameters('vnetResourceId'), '/')[4]]",
+        "vnetName": "[split(parameters('vnetResourceId'), '/')[8]]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "name": "subnetDeployment",
+            "condition": "[not(equals(parameters('subnetAddressPrefix'), 'null'))]",
+            "apiVersion": "[variables('apiVersions').deployments]",
+            "resourceGroup": "[variables('vnetResourceGroup')]",
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                    },
+                    "variables": {
+                    },
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks/subnets",
+                            "name": "[concat(variables('vnetName'), '/', variables('prefixes').subnet, parameters('appName'))]",
+                            "apiVersion": "[variables('apiVersions').network]",
+                            "location": "[resourceGroup().location]",
+                            "properties": {
+                                "addressPrefix": "[parameters('subnetAddressPrefix')]",
+                                "delegations": [
+                                    {
+                                        "name": "Microsoft.Web.serverFarms",
+                                        "properties": {
+                                            "serviceName": "Microsoft.Web/serverFarms"
+                                        }
+                                    }
+                                ],
+                                "serviceEndpoints": [
+                                    {
+                                        "service": "Microsoft.AzureActiveDirectory",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.AzureCosmosDB",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.ContainerRegistry",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.EventHub",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.KeyVault",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.ServiceBus",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.Sql",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.Storage",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    },
+                                    {
+                                        "service": "Microsoft.Web",
+                                        "locations": "[variables('serviceEndpointLocations')]"
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "parameters": {}
+            }
+        },
+        {
+            "type": "Microsoft.Insights/components",
+            "name": "[concat(variables('prefixes').insights, parameters('appName'))]",
+            "apiVersion": "[variables('apiVersions').insights]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": {
+                "Application_Type": "web",
+                "Flow_Type": "Bluefield"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "name": "[concat(variables('prefixes').appServicePlan, parameters('appName'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('aspSku')]"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "name": "[parameters('appName')]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
+                "subnetDeployment"
+            ],
+            "kind": "functionapp",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('appName'), variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('appName'), '.scm', variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
+                "siteConfig": {
+                    "AlwaysOn": true,
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION ",
+                            "value": "~3"
+                        }
+                    ]
+                },
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 1536,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            },
+            "resources": [
+                {
+                    "name": "virtualNetwork",
+                    "type": "config",
+                    "apiVersion": "[variables('apiVersions').swift]",
+                    "location": "[resourceGroup().location]",
+                    "properties": {
+                        "subnetResourceid": "[concat(parameters('vnetResourceId'), '/subnets/', variables('prefixes').subnet, parameters('appName'))]",
+                        "swiftSupported": true
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "name": "[concat(parameters('appName'), '/', parameters('appName'), variables('dnsSuffix'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "siteName": "[parameters('appName')]",
+                "hostNameType": "Verified"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()])]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "slotLoop",
+                "count": "[length(parameters('slotNames'))]"
+            },
+            "kind": "functionapp",
+            "properties": {
+                "enabled": true,
+                "hostNameSslStates": [
+                    {
+                        "name": "[concat(parameters('appName'), '-', parameters('slotNames')[copyIndex()], variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Standard"
+                    },
+                    {
+                        "name": "[concat(parameters('appName'), '-', parameters('slotNames')[copyIndex()], '.scm', variables('dnsSuffix'))]",
+                        "sslState": "Disabled",
+                        "hostType": "Repository"
+                    }
+                ],
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
+                "siteConfig": {
+                    "AlwaysOn": true,
+                    "appSettings": [
+                        {
+                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                            "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION ",
+                            "value": "~3"
+                        }
+                    ]
+                },
+                "reserved": false,
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "hostNamesDisabled": false,
+                "containerSize": 1536,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('appName'))]",
+                "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/hostNameBindings",
+            "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()], '/', parameters('appName'), '-', parameters('slotNames')[copyIndex()], variables('dnsSuffix'))]",
+            "apiVersion": "[variables('apiVersions').web]",
+            "location": "[resourceGroup().location]",
+            "copy": {
+                "name": "slotBindingsLoop",
+                "count": "[length(parameters('slotNames'))]"
+            },
+            "properties": {
+                "siteName": "[concat(parameters('appName'), '(', parameters('slotNames')[copyIndex()], ')')]",
+                "hostNameType": "Verified"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('appName'), parameters('slotNames')[copyIndex()])]"
+            ]
+        }
+    ]
+}

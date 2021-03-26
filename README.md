@@ -134,12 +134,20 @@ Deploys Azure Automation, Log Analytics, & App Insights resources
 
 ## Web
 
+### appService.json
+
+Deploys App Service infra
+
+<br>
+
 ### function.json
 
 Deploys Function App infra
 
 <br>
 
-### appService.json
+### function.vnetIntegrated.json
 
-Deploys App Service infra
+Deploys a new subnet and Vnet-integrated Function App infra
+
+<br>
