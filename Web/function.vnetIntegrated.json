@@ -21,7 +21,7 @@
         },
         "aspSku": {
             "type": "string",
-            "defaultValue": "p1v3",
+            "defaultValue": "p2v3",
             "metadata": {
                 "description": "The sku of the app service plan"
             }
