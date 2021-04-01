@@ -187,6 +187,10 @@
                     "AlwaysOn": true,
                     "appSettings": [
                         {
+                            "name": "FUNCTIONS_EXTENSION_VERSION ",
+                            "value": "~3"
+                        },
+                        {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
                             "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
                         }
@@ -197,8 +201,6 @@
                 "clientAffinityEnabled": false,
                 "clientCertEnabled": false,
                 "hostNamesDisabled": false,
-                "containerSize": 1536,
-                "dailyMemoryTimeQuota": 0,
                 "httpsOnly": false
             },
             "resources": [
@@ -269,8 +271,6 @@
                 "clientAffinityEnabled": false,
                 "clientCertEnabled": false,
                 "hostNamesDisabled": false,
-                "containerSize": 1536,
-                "dailyMemoryTimeQuota": 0,
                 "httpsOnly": false
             },
             "dependsOn": [
