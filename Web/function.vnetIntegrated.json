@@ -189,14 +189,6 @@
                         {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
                             "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
-                        },
-                        {
-                            "name": "FUNCTIONS_EXTENSION_VERSION ",
-                            "value": "~3"
-                        },
-                        {
-                            "name": "FUNCTIONS_WORKER_RUNTIME",
-                            "value": "dotnet"
                         }
                     ]
                 },
@@ -269,10 +261,6 @@
                         {
                             "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
                             "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
-                        },
-                        {
-                            "name": "FUNCTIONS_EXTENSION_VERSION ",
-                            "value": "~3"
                         }
                     ]
                 },
