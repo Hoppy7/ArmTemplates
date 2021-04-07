@@ -21,7 +21,7 @@
         },
         "aspSku": {
             "type": "string",
-            "defaultValue": "p2v3",
+            "defaultValue": "p1v3",
             "metadata": {
                 "description": "The sku of the app service plan"
             }
@@ -47,7 +47,8 @@
             "insights": "2015-05-01",
             "network": "2020-05-01",
             "swift": "2018-02-01",
-            "web": "2019-08-01"
+            "web": "2019-08-01",
+            "webAppSettings": "2020-09-01"
         },
         "prefixes": {
             "appServicePlan": "asp-",
@@ -184,17 +185,7 @@
                 ],
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
                 "siteConfig": {
-                    "AlwaysOn": true,
-                    "appSettings": [
-                        {
-                            "name": "FUNCTIONS_EXTENSION_VERSION ",
-                            "value": "~3"
-                        },
-                        {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
-                        }
-                    ]
+                    "AlwaysOn": true
                 },
                 "reserved": false,
                 "scmSiteAlsoStopped": false,
@@ -233,6 +224,18 @@
             ]
         },
         {
+            "type": "Microsoft.Web/sites/config",
+            "name": "[concat(parameters('appName'), '/appSettings')]",
+            "apiVersion": "[variables('apiVersions').webAppSettings]",
+            "properties": {
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', parameters('appName'))]"
+            ]
+        },
+        {
             "type": "Microsoft.Web/sites/slots",
             "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()])]",
             "apiVersion": "[variables('apiVersions').web]",
@@ -258,13 +261,7 @@
                 ],
                 "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]",
                 "siteConfig": {
-                    "AlwaysOn": true,
-                    "appSettings": [
-                        {
-                            "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
-                            "value": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
-                        }
-                    ]
+                    "AlwaysOn": true
                 },
                 "reserved": false,
                 "scmSiteAlsoStopped": false,
@@ -276,7 +273,7 @@
             "dependsOn": [
                 "[resourceId('Microsoft.Web/sites', parameters('appName'))]",
                 "[resourceId('Microsoft.Web/serverfarms', concat(variables('prefixes').appServicePlan, parameters('appName')))]"
-            ] 
+            ]
         },
         {
             "type": "Microsoft.Web/sites/slots/hostNameBindings",
@@ -290,6 +287,22 @@
             "properties": {
                 "siteName": "[concat(parameters('appName'), '(', parameters('slotNames')[copyIndex()], ')')]",
                 "hostNameType": "Verified"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('appName'), parameters('slotNames')[copyIndex()])]"
+            ]
+        },
+        {
+            "type": "Microsoft.Web/sites/slots/config",
+            "name": "[concat(parameters('appName'), '/', parameters('slotNames')[copyIndex()], '/appSettings')]",
+            "apiVersion": "[variables('apiVersions').webAppSettings]",
+            "copy": {
+                "name": "slotAppSettingLoop",
+                "count": "[length(parameters('slotNames'))]"
+            },
+            "properties": {
+                "FUNCTIONS_EXTENSION_VERSION": "~3",
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(resourceId('Microsoft.Insights/components', concat(variables('prefixes').insights, parameters('appName'))), variables('apiVersions').insights).InstrumentationKey]"
             },
             "dependsOn": [
                 "[resourceId('Microsoft.Web/sites/slots', parameters('appName'), parameters('slotNames')[copyIndex()])]"
